@@ -8,7 +8,7 @@ import { User } from '../models/loan.model';
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly apiUrl = 'http://localhost:5000/api/auth';
+  private readonly apiUrl = '/api/auth';
   
   // Reactive state using Angular Signals
   currentUser = signal<User | null>(this.getStoredUser());
@@ -62,6 +62,9 @@ export class AuthService {
           localStorage.setItem('lm_user', JSON.stringify(res.user));
           localStorage.setItem('lm_jwt_token', res.token);
           localStorage.setItem('lm_csrf_token', res.csrfToken);
+          if (res.sessionId) {
+            localStorage.setItem('lm_session_id', res.sessionId);
+          }
         }
       })
     );
@@ -85,6 +88,7 @@ export class AuthService {
     localStorage.removeItem('lm_user');
     localStorage.removeItem('lm_jwt_token');
     localStorage.removeItem('lm_csrf_token');
+    localStorage.removeItem('lm_session_id');
     localStorage.removeItem('lm_dash_summary');
     localStorage.removeItem('lm_admin_users');
     localStorage.removeItem('lm_loans_cache');

@@ -30,6 +30,13 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
         </div>
       </div>
 
+      @if (errorMessage) {
+        <div class="alert alert-danger" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>⚠️ {{ errorMessage }}</span>
+          <button class="btn btn-sm btn-secondary" (click)="loadDashboard()">🔄 Retry</button>
+        </div>
+      }
+
       @if (loading && !summary) {
         <div class="metrics-grid">
           <div class="metric-card skeleton-card">
@@ -695,6 +702,7 @@ export class DashboardComponent implements OnInit {
 
   summary: DashboardSummary | null = this.getCachedSummary();
   loading = !this.summary;
+  errorMessage = '';
 
   // Repayment Modal
   selectedLoanForPayment: Loan | null = null;
@@ -719,6 +727,7 @@ export class DashboardComponent implements OnInit {
   }
 
   loadDashboard() {
+    this.errorMessage = '';
     if (!this.summary) {
       this.loading = true;
     }
@@ -734,6 +743,7 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
+        this.errorMessage = err.error?.error || 'Unable to connect or fetch dashboard data.';
         console.error('Failed to load dashboard:', err);
       }
     });

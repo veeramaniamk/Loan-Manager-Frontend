@@ -24,6 +24,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     headersConfig['x-xsrf-token'] = csrfToken;
   }
 
+  const sessionId = localStorage.getItem('lm_session_id');
+  if (sessionId) {
+    headersConfig['x-session-id'] = sessionId;
+  }
+
   // Always enable withCredentials so session cookies are exchanged automatically
   const cloned = req.clone({
     setHeaders: headersConfig,
