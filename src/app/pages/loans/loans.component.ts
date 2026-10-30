@@ -642,9 +642,18 @@ import { Loan, Person, LoanPayment } from '../../core/models/loan.model';
 export class LoansComponent implements OnInit {
   apiService = inject(ApiService);
 
-  loans: Loan[] = [];
+  loans: Loan[] = this.getCachedLoans();
   existingPeople: Person[] = [];
-  loading = true;
+  loading = this.loans.length === 0;
+
+  private getCachedLoans(): Loan[] {
+    try {
+      const cached = localStorage.getItem('lm_loans_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  }
 
   // Filter params
   searchQuery = '';
@@ -685,7 +694,9 @@ export class LoansComponent implements OnInit {
   }
 
   loadLoans() {
-    this.loading = true;
+    if (this.loans.length === 0) {
+      this.loading = true;
+    }
     this.apiService.getLoans({
       search: this.searchQuery,
       type: this.filterType,
@@ -696,6 +707,9 @@ export class LoansComponent implements OnInit {
         this.loading = false;
         if (res.success) {
           this.loans = res.data;
+          try {
+            localStorage.setItem('lm_loans_cache', JSON.stringify(res.data));
+          } catch {}
         }
       },
       error: (err) => {

@@ -23,21 +23,21 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
         <button 
           class="tab-link" 
           [class.active]="activeTab === 'users'" 
-          (click)="activeTab = 'users'"
+          (click)="switchTab('users')"
         >
           👥 User Management & Pending Debt Totals
         </button>
         <button 
           class="tab-link" 
           [class.active]="activeTab === 'activity'" 
-          (click)="activeTab = 'activity'"
+          (click)="switchTab('activity')"
         >
           📈 Monthly Activity & Growth
         </button>
         <button 
           class="tab-link" 
           [class.active]="activeTab === 'logs'" 
-          (click)="activeTab = 'logs'"
+          (click)="switchTab('logs')"
         >
           🚨 Security & Failure Audit Logs
         </button>
@@ -547,8 +547,8 @@ export class AdminComponent implements OnInit {
   activeTab: 'users' | 'activity' | 'logs' = 'users';
 
   // Users tab
-  users: User[] = [];
-  loadingUsers = true;
+  users: User[] = this.getCachedUsers();
+  loadingUsers = this.users.length === 0;
   showUserModal = false;
   editingUserId: number | null = null;
   userFormData = {
@@ -571,19 +571,40 @@ export class AdminComponent implements OnInit {
   loadingLogs = false;
   selectedLog: SecurityLog | null = null;
 
+  private getCachedUsers(): User[] {
+    try {
+      const cached = localStorage.getItem('lm_admin_users');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  }
+
   ngOnInit() {
     this.loadUsers();
-    this.loadMonthlyActivity();
-    this.loadSecurityLogs();
+  }
+
+  switchTab(tab: 'users' | 'activity' | 'logs') {
+    this.activeTab = tab;
+    if (tab === 'activity' && this.monthlyActivity.length === 0) {
+      this.loadMonthlyActivity();
+    } else if (tab === 'logs' && this.securityLogs.length === 0) {
+      this.loadSecurityLogs();
+    }
   }
 
   loadUsers() {
-    this.loadingUsers = true;
+    if (this.users.length === 0) {
+      this.loadingUsers = true;
+    }
     this.apiService.getAdminUsers().subscribe({
       next: (res) => {
         this.loadingUsers = false;
         if (res.success) {
           this.users = res.data;
+          try {
+            localStorage.setItem('lm_admin_users', JSON.stringify(res.data));
+          } catch {}
         }
       },
       error: (err) => {

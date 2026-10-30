@@ -282,7 +282,10 @@ export class LoginComponent {
       }).subscribe({
         next: (res) => {
           this.loading = false;
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+          let returnUrl = this.route.snapshot.queryParams['returnUrl'];
+          if (!returnUrl || returnUrl === '/login') {
+            returnUrl = res.user?.role === 'admin' ? '/admin' : '/dashboard';
+          }
           this.router.navigateByUrl(returnUrl);
         },
         error: (err) => {

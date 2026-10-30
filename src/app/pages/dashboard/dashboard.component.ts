@@ -30,10 +30,28 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
         </div>
       </div>
 
-      @if (loading) {
-        <div class="loading-state">
-          <div class="spinner"></div>
-          <p>Analyzing loan ledgers and computing daily cashflow...</p>
+      @if (loading && !summary) {
+        <div class="metrics-grid">
+          <div class="metric-card skeleton-card">
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line big"></div>
+            <div class="skeleton-line medium"></div>
+          </div>
+          <div class="metric-card skeleton-card">
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line big"></div>
+            <div class="skeleton-line medium"></div>
+          </div>
+          <div class="metric-card skeleton-card">
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line big"></div>
+            <div class="skeleton-line medium"></div>
+          </div>
+          <div class="metric-card skeleton-card">
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line big"></div>
+            <div class="skeleton-line medium"></div>
+          </div>
         </div>
       } @else if (summary) {
         <!-- KPI Metrics Grid -->
@@ -647,14 +665,36 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
       margin-bottom: 1.25rem;
       font-size: 0.875rem;
     }
+    .skeleton-card {
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      justify-content: center;
+      background: #ffffff;
+    }
+    .skeleton-line {
+      height: 14px;
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+    .skeleton-line.short { width: 40%; height: 12px; }
+    .skeleton-line.big { width: 70%; height: 28px; }
+    .skeleton-line.medium { width: 85%; height: 12px; }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
   `]
 })
 export class DashboardComponent implements OnInit {
   apiService = inject(ApiService);
   authService = inject(AuthService);
 
-  summary: DashboardSummary | null = null;
-  loading = true;
+  summary: DashboardSummary | null = this.getCachedSummary();
+  loading = !this.summary;
 
   // Repayment Modal
   selectedLoanForPayment: Loan | null = null;
@@ -665,17 +705,31 @@ export class DashboardComponent implements OnInit {
   submittingPayment = false;
   paymentError = '';
 
+  private getCachedSummary(): DashboardSummary | null {
+    try {
+      const cached = localStorage.getItem('lm_dash_summary');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  }
+
   ngOnInit() {
     this.loadDashboard();
   }
 
   loadDashboard() {
-    this.loading = true;
+    if (!this.summary) {
+      this.loading = true;
+    }
     this.apiService.getDashboardSummary().subscribe({
       next: (res) => {
         this.loading = false;
         if (res.success) {
           this.summary = res.data;
+          try {
+            localStorage.setItem('lm_dash_summary', JSON.stringify(res.data));
+          } catch {}
         }
       },
       error: (err) => {

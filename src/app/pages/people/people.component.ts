@@ -370,9 +370,9 @@ import { Person, Loan } from '../../core/models/loan.model';
 export class PeopleComponent implements OnInit {
   apiService = inject(ApiService);
 
-  people: Person[] = [];
+  people: Person[] = this.getCachedPeople();
   searchTerm = '';
-  loading = true;
+  loading = this.people.length === 0;
 
   // Modal state
   showModal = false;
@@ -390,17 +390,31 @@ export class PeopleComponent implements OnInit {
   // History modal
   selectedPersonDetail: (Person & { loans: Loan[] }) | null = null;
 
+  private getCachedPeople(): Person[] {
+    try {
+      const cached = localStorage.getItem('lm_people_cache');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  }
+
   ngOnInit() {
     this.loadPeople();
   }
 
   loadPeople() {
-    this.loading = true;
+    if (this.people.length === 0) {
+      this.loading = true;
+    }
     this.apiService.getPeople().subscribe({
       next: (res) => {
         this.loading = false;
         if (res.success) {
           this.people = res.data;
+          try {
+            localStorage.setItem('lm_people_cache', JSON.stringify(res.data));
+          } catch {}
         }
       },
       error: (err) => {

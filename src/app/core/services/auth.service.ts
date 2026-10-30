@@ -85,6 +85,10 @@ export class AuthService {
     localStorage.removeItem('lm_user');
     localStorage.removeItem('lm_jwt_token');
     localStorage.removeItem('lm_csrf_token');
+    localStorage.removeItem('lm_dash_summary');
+    localStorage.removeItem('lm_admin_users');
+    localStorage.removeItem('lm_loans_cache');
+    localStorage.removeItem('lm_people_cache');
     this.router.navigate(['/login']);
   }
 
