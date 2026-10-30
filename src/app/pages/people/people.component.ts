@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
@@ -369,6 +369,7 @@ import { Person, Loan } from '../../core/models/loan.model';
 })
 export class PeopleComponent implements OnInit {
   apiService = inject(ApiService);
+  cdr = inject(ChangeDetectorRef);
 
   people: Person[] = this.getCachedPeople();
   searchTerm = '';
@@ -407,6 +408,7 @@ export class PeopleComponent implements OnInit {
     if (this.people.length === 0) {
       this.loading = true;
     }
+    this.cdr.markForCheck();
     this.apiService.getPeople().subscribe({
       next: (res) => {
         this.loading = false;
@@ -416,10 +418,12 @@ export class PeopleComponent implements OnInit {
             localStorage.setItem('lm_people_cache', JSON.stringify(res.data));
           } catch {}
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.loading = false;
         console.error('Failed to load people:', err);
+        this.cdr.markForCheck();
       }
     });
   }

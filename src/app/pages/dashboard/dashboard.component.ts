@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -699,6 +699,7 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
 export class DashboardComponent implements OnInit {
   apiService = inject(ApiService);
   authService = inject(AuthService);
+  cdr = inject(ChangeDetectorRef);
 
   summary: DashboardSummary | null = this.getCachedSummary();
   loading = !this.summary;
@@ -731,6 +732,8 @@ export class DashboardComponent implements OnInit {
     if (!this.summary) {
       this.loading = true;
     }
+    this.cdr.markForCheck();
+
     this.apiService.getDashboardSummary().subscribe({
       next: (res) => {
         this.loading = false;
@@ -740,11 +743,13 @@ export class DashboardComponent implements OnInit {
             localStorage.setItem('lm_dash_summary', JSON.stringify(res.data));
           } catch {}
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.loading = false;
         this.errorMessage = err.error?.error || 'Unable to connect or fetch dashboard data.';
         console.error('Failed to load dashboard:', err);
+        this.cdr.markForCheck();
       }
     });
   }
@@ -762,21 +767,25 @@ export class DashboardComponent implements OnInit {
     this.paymentMethod = 'upi';
     this.paymentNotes = '';
     this.paymentError = '';
+    this.cdr.markForCheck();
   }
 
   closePaymentModal() {
     this.selectedLoanForPayment = null;
     this.paymentError = '';
+    this.cdr.markForCheck();
   }
 
   submitPayment() {
     if (!this.selectedLoanForPayment) return;
     if (!this.paymentAmount || this.paymentAmount <= 0) {
       this.paymentError = 'Please enter a valid payment amount';
+      this.cdr.markForCheck();
       return;
     }
 
     this.submittingPayment = true;
+    this.cdr.markForCheck();
     this.apiService.addLoanPayment(this.selectedLoanForPayment.id, {
       amount: this.paymentAmount,
       payment_date: this.paymentDate,
@@ -787,10 +796,12 @@ export class DashboardComponent implements OnInit {
         this.submittingPayment = false;
         this.closePaymentModal();
         this.loadDashboard(); // Refresh metrics instantly
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.submittingPayment = false;
         this.paymentError = err.error?.error || 'Failed to record payment';
+        this.cdr.markForCheck();
       }
     });
   }

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -214,6 +214,7 @@ export class LoginComponent {
   authService = inject(AuthService);
   router = inject(Router);
   route = inject(ActivatedRoute);
+  cdr = inject(ChangeDetectorRef);
 
   isRegisterMode = false;
   username = '';
@@ -229,6 +230,7 @@ export class LoginComponent {
     this.isRegisterMode = !this.isRegisterMode;
     this.errorMessage = '';
     this.successMessage = '';
+    this.cdr.markForCheck();
   }
 
   fillDemo(type: 'admin' | 'user') {
@@ -239,6 +241,7 @@ export class LoginComponent {
       this.username = 'veera';
       this.password = 'veera123';
     }
+    this.cdr.markForCheck();
   }
 
   onSubmit() {
@@ -247,15 +250,18 @@ export class LoginComponent {
 
     if (!this.username || !this.password) {
       this.errorMessage = 'Please enter both username and password';
+      this.cdr.markForCheck();
       return;
     }
 
     this.loading = true;
+    this.cdr.markForCheck();
 
     if (this.isRegisterMode) {
       if (!this.fullName || !this.email) {
         this.errorMessage = 'Full name and email are required for registration';
         this.loading = false;
+        this.cdr.markForCheck();
         return;
       }
 
@@ -269,10 +275,12 @@ export class LoginComponent {
           this.loading = false;
           this.successMessage = 'Registration successful! You can now log in.';
           this.isRegisterMode = false;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.loading = false;
           this.errorMessage = err.error?.error || 'Registration failed. Try a different username/email.';
+          this.cdr.markForCheck();
         }
       });
     } else {
@@ -286,11 +294,13 @@ export class LoginComponent {
           if (!returnUrl || returnUrl === '/login') {
             returnUrl = res.user?.role === 'admin' ? '/admin' : '/dashboard';
           }
+          this.cdr.markForCheck();
           this.router.navigateByUrl(returnUrl);
         },
         error: (err) => {
           this.loading = false;
           this.errorMessage = err.error?.error || 'Invalid credentials or validation pipeline error';
+          this.cdr.markForCheck();
         }
       });
     }

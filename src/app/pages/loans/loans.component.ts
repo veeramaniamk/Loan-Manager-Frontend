@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
@@ -641,6 +641,7 @@ import { Loan, Person, LoanPayment } from '../../core/models/loan.model';
 })
 export class LoansComponent implements OnInit {
   apiService = inject(ApiService);
+  cdr = inject(ChangeDetectorRef);
 
   loans: Loan[] = this.getCachedLoans();
   existingPeople: Person[] = [];
@@ -697,6 +698,7 @@ export class LoansComponent implements OnInit {
     if (this.loans.length === 0) {
       this.loading = true;
     }
+    this.cdr.markForCheck();
     this.apiService.getLoans({
       search: this.searchQuery,
       type: this.filterType,
@@ -711,10 +713,12 @@ export class LoansComponent implements OnInit {
             localStorage.setItem('lm_loans_cache', JSON.stringify(res.data));
           } catch {}
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.loading = false;
         console.error('Error fetching loans:', err);
+        this.cdr.markForCheck();
       }
     });
   }
@@ -724,6 +728,7 @@ export class LoansComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           this.existingPeople = res.data;
+          this.cdr.markForCheck();
         }
       }
     });
@@ -858,6 +863,7 @@ export class LoansComponent implements OnInit {
           this.ledgerPaymentDate = new Date().toISOString().slice(0, 10);
           this.ledgerPaymentMethod = 'upi';
           this.ledgerPaymentNotes = '';
+          this.cdr.markForCheck();
         }
       }
     });
@@ -865,6 +871,7 @@ export class LoansComponent implements OnInit {
 
   closeLedgerModal() {
     this.selectedLoanForLedger = null;
+    this.cdr.markForCheck();
     this.loadLoans(); // refresh updated balance in main table
   }
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
@@ -543,6 +543,7 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
 export class AdminComponent implements OnInit {
   apiService = inject(ApiService);
   authService = inject(AuthService);
+  cdr = inject(ChangeDetectorRef);
 
   activeTab: 'users' | 'activity' | 'logs' = 'users';
 
@@ -586,6 +587,7 @@ export class AdminComponent implements OnInit {
 
   switchTab(tab: 'users' | 'activity' | 'logs') {
     this.activeTab = tab;
+    this.cdr.markForCheck();
     if (tab === 'activity' && this.monthlyActivity.length === 0) {
       this.loadMonthlyActivity();
     } else if (tab === 'logs' && this.securityLogs.length === 0) {
@@ -597,6 +599,7 @@ export class AdminComponent implements OnInit {
     if (this.users.length === 0) {
       this.loadingUsers = true;
     }
+    this.cdr.markForCheck();
     this.apiService.getAdminUsers().subscribe({
       next: (res) => {
         this.loadingUsers = false;
@@ -606,42 +609,50 @@ export class AdminComponent implements OnInit {
             localStorage.setItem('lm_admin_users', JSON.stringify(res.data));
           } catch {}
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.loadingUsers = false;
         console.error('Error fetching admin users:', err);
+        this.cdr.markForCheck();
       }
     });
   }
 
   loadMonthlyActivity() {
     this.loadingActivity = true;
+    this.cdr.markForCheck();
     this.apiService.getAdminMonthlyActivity().subscribe({
       next: (res) => {
         this.loadingActivity = false;
         if (res.success) {
           this.monthlyActivity = res.data;
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.loadingActivity = false;
         console.error('Error fetching monthly activity:', err);
+        this.cdr.markForCheck();
       }
     });
   }
 
   loadSecurityLogs() {
     this.loadingLogs = true;
+    this.cdr.markForCheck();
     this.apiService.getAdminSecurityLogs(60).subscribe({
       next: (res) => {
         this.loadingLogs = false;
         if (res.success) {
           this.securityLogs = res.data;
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.loadingLogs = false;
         console.error('Error fetching security logs:', err);
+        this.cdr.markForCheck();
       }
     });
   }
