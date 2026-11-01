@@ -3,7 +3,14 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
-import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model';
+import { 
+  User, 
+  MonthlyActivity, 
+  SecurityLog,
+  AdminCateringStaffByPerson,
+  CateringStaffPayment,
+  CateringSummary
+} from '../../core/models/loan.model';
 
 @Component({
   selector: 'app-admin',
@@ -14,7 +21,7 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
       <div class="page-header">
         <div>
           <h1 class="page-title">🛡️ Admin Console</h1>
-          <p class="page-subtitle">Manage users, audit pending debt totals, monitor monthly activity & inspect security logs</p>
+          <p class="page-subtitle">Manage users, audit pending debt totals, monitor monthly activity, inspect security logs & audit catering staff wages</p>
         </div>
       </div>
 
@@ -26,6 +33,13 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
           (click)="switchTab('users')"
         >
           👥 User Management & Pending Debt Totals
+        </button>
+        <button 
+          class="tab-link" 
+          [class.active]="activeTab === 'catering'" 
+          (click)="switchTab('catering')"
+        >
+          🍽️ Catering Staff Salary Audit by Person
         </button>
         <button 
           class="tab-link" 
@@ -136,7 +150,123 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
         </div>
       }
 
-      <!-- TAB 2: Monthly Activity & Trends -->
+      <!-- TAB 2: Catering Staff Salary Audit by Person (Key User Requirement) -->
+      @if (activeTab === 'catering') {
+        <div class="tab-content">
+          <div class="content-action-bar">
+            <div>
+              <h3>🍽️ Catering Staff Salary Audit by Person</h3>
+              <p class="text-muted">Audit catering workers across all accounts: shifts worked, wages earned (₹300/session), paid amounts & pending balances</p>
+            </div>
+            <button class="btn btn-secondary" (click)="loadAdminCateringData()" [disabled]="loadingCatering">
+              <span>🔄 Refresh Audit</span>
+            </button>
+          </div>
+
+          <!-- Catering KPI Metrics -->
+          @if (cateringSummary) {
+            <div class="catering-admin-metrics">
+              <div class="admin-kpi-card">
+                <span class="kpi-label">Total Catering Events</span>
+                <strong class="kpi-val">{{ cateringSummary.totalServices }}</strong>
+                <span class="text-xs text-muted">{{ cateringSummary.upcomingServices }} upcoming</span>
+              </div>
+              <div class="admin-kpi-card">
+                <span class="kpi-label">Upcoming Revenue</span>
+                <strong class="kpi-val text-primary">{{ cateringSummary.totalUpcomingAmount | currency:'INR':'symbol':'1.0-0' }}</strong>
+                <span class="text-xs text-muted">Pending from clients: {{ cateringSummary.totalPendingCustomerAmount | currency:'INR':'symbol':'1.0-0' }}</span>
+              </div>
+              <div class="admin-kpi-card">
+                <span class="kpi-label">Total Staff Wages</span>
+                <strong class="kpi-val text-danger">{{ cateringSummary.totalStaffSalaryObligation | currency:'INR':'symbol':'1.0-0' }}</strong>
+                <span class="text-xs text-muted">Rule: ₹300 per session worked</span>
+              </div>
+              <div class="admin-kpi-card">
+                <span class="kpi-label">Pending Staff Wages to Pay</span>
+                <strong class="kpi-val text-warning">{{ cateringSummary.pendingStaffSalaryToPay | currency:'INR':'symbol':'1.0-0' }}</strong>
+                <span class="text-xs text-muted">Paid to date: {{ cateringSummary.totalStaffSalaryPaid | currency:'INR':'symbol':'1.0-0' }}</span>
+              </div>
+            </div>
+          }
+
+          @if (loadingCatering) {
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Auditing staff attendance, session counts and wages...</p>
+            </div>
+          } @else if (cateringStaff.length === 0) {
+            <div class="card empty-card">
+              <span class="empty-icon">🍽️</span>
+              <h3>No catering staff members found</h3>
+              <p class="text-muted">No staff members have been assigned to catering services yet.</p>
+            </div>
+          } @else {
+            <div class="card p-0">
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Staff Member (Person)</th>
+                      <th>Contact</th>
+                      <th>Role</th>
+                      <th>Managed Under</th>
+                      <th>Events Worked</th>
+                      <th>Total Shifts</th>
+                      <th>Total Salary Earned</th>
+                      <th>Paid to Date</th>
+                      <th>Pending Balance</th>
+                      <th style="text-align: right;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (person of cateringStaff; track person.member_id) {
+                      <tr>
+                        <td>
+                          <strong>{{ person.member_name }}</strong>
+                        </td>
+                        <td>
+                          <a [href]="'tel:' + person.member_phone" class="phone-link">📞 {{ person.member_phone }}</a>
+                        </td>
+                        <td>
+                          <span class="badge badge-secondary">{{ person.member_role }}</span>
+                        </td>
+                        <td>
+                          <span>{{ person.user_name }}</span>
+                          <span class="text-muted text-xs d-block">&#64;{{ person.username }}</span>
+                        </td>
+                        <td>
+                          <span>{{ person.total_services_worked }} events</span>
+                        </td>
+                        <td>
+                          <span class="badge badge-secondary">{{ person.total_sessions_worked }} shift(s)</span>
+                        </td>
+                        <td>
+                          <strong class="text-primary">{{ person.total_salary_earned | currency:'INR':'symbol':'1.0-0' }}</strong>
+                        </td>
+                        <td>
+                          <strong class="text-success">{{ person.total_salary_paid | currency:'INR':'symbol':'1.0-0' }}</strong>
+                        </td>
+                        <td>
+                          <strong [ngClass]="person.pending_balance > 0 ? 'text-danger font-bold' : 'text-muted'">
+                            {{ person.pending_balance | currency:'INR':'symbol':'1.0-0' }}
+                          </strong>
+                        </td>
+                        <td style="text-align: right;">
+                          <button class="btn btn-secondary btn-sm" (click)="viewPersonSalaryLogs(person)">
+                            📜 View Payment Logs
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- TAB 3: Monthly Activity & Trends -->
       @if (activeTab === 'activity') {
         <div class="tab-content">
           <div class="content-action-bar">
@@ -204,7 +334,7 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
         </div>
       }
 
-      <!-- TAB 3: Security & Validation Failure Audit Logs -->
+      <!-- TAB 4: Security & Validation Failure Audit Logs -->
       @if (activeTab === 'logs') {
         <div class="tab-content">
           <div class="content-action-bar">
@@ -277,7 +407,7 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
         </div>
       }
 
-      <!-- Add / Edit User Modal -->
+      <!-- MODAL 1: Add / Edit User -->
       @if (showUserModal) {
         <div class="modal-overlay" (click)="closeUserModal()">
           <div class="modal-dialog" (click)="$event.stopPropagation()">
@@ -337,7 +467,7 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
         </div>
       }
 
-      <!-- Inspect Log Detail Modal -->
+      <!-- MODAL 2: Inspect Security Log -->
       @if (selectedLog) {
         <div class="modal-overlay" (click)="closeLogModal()">
           <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
@@ -392,6 +522,82 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
             </div>
             <div class="modal-footer">
               <button class="btn btn-secondary" (click)="closeLogModal()">Close Inspector</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- MODAL 3: Catering Staff Payment Logs by Person (Admin View) -->
+      @if (showCateringLogsModal && selectedCateringPerson) {
+        <div class="modal-overlay" (click)="closeCateringLogsModal()">
+          <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <div>
+                <h3>📜 Staff Salary Payment History: {{ selectedCateringPerson.member_name }}</h3>
+                <span class="text-muted text-xs">
+                  Contact: {{ selectedCateringPerson.member_phone }} • Managed by: {{ selectedCateringPerson.user_name }}
+                </span>
+              </div>
+              <button class="btn btn-sm btn-secondary" (click)="closeCateringLogsModal()">✕</button>
+            </div>
+            <div class="modal-body">
+              <div class="pay-history-banner">
+                <div>
+                  <span class="text-xs text-muted">Total Salary Earned:</span>
+                  <strong class="text-primary d-block">{{ selectedCateringPerson.total_salary_earned | currency:'INR':'symbol':'1.0-0' }}</strong>
+                </div>
+                <div>
+                  <span class="text-xs text-muted">Total Wages Paid:</span>
+                  <strong class="text-success d-block">{{ selectedCateringPerson.total_salary_paid | currency:'INR':'symbol':'1.0-0' }}</strong>
+                </div>
+                <div>
+                  <span class="text-xs text-muted">Pending Balance:</span>
+                  <strong class="text-danger d-block">{{ selectedCateringPerson.pending_balance | currency:'INR':'symbol':'1.0-0' }}</strong>
+                </div>
+              </div>
+
+              @if (cateringLogs.length === 0) {
+                <p class="text-muted text-center py-4">No payment transaction records found for this person yet.</p>
+              } @else {
+                <div class="table-container">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Payment Date</th>
+                        <th>Catering Event</th>
+                        <th>Amount Paid</th>
+                        <th>Payment Mode</th>
+                        <th>Notes / Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (log of cateringLogs; track log.id) {
+                        <tr>
+                          <td>{{ log.payment_date | date:'dd MMM yyyy' }}</td>
+                          <td>
+                            <strong>{{ log.service_name || 'Direct Salary Payment' }}</strong>
+                            @if (log.service_location) {
+                              <span class="text-muted text-xs d-block">📍 {{ log.service_location }}</span>
+                            }
+                          </td>
+                          <td>
+                            <strong class="text-success">{{ log.amount | currency:'INR':'symbol':'1.0-0' }}</strong>
+                          </td>
+                          <td>
+                            <span class="badge badge-secondary">{{ log.payment_method }}</span>
+                          </td>
+                          <td>
+                            <span class="text-muted">{{ log.notes || 'No remarks recorded' }}</span>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" (click)="closeCateringLogsModal()">Close Logs</button>
             </div>
           </div>
         </div>
@@ -474,6 +680,9 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
         font-size: 0.725rem !important;
         padding: 0.75rem !important;
         max-height: 180px !important;
+      }
+      .catering-admin-metrics {
+        grid-template-columns: 1fr 1fr !important;
       }
     }
     .tab-link {
@@ -594,6 +803,51 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    /* Catering Admin Specific Styles */
+    .catering-admin-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .admin-kpi-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .kpi-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .kpi-val {
+      font-size: 1.4rem;
+      line-height: 1.1;
+    }
+    .phone-link {
+      color: var(--primary);
+      text-decoration: underline;
+      font-size: 0.85rem;
+    }
+    .text-xs { font-size: 0.725rem; }
+    .d-block { display: block; }
+    .font-bold { font-weight: 700; }
+
+    .pay-history-banner {
+      display: flex;
+      justify-content: space-around;
+      background: #f8fafc;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      margin-bottom: 1.25rem;
+    }
   `]
 })
 export class AdminComponent implements OnInit {
@@ -601,7 +855,7 @@ export class AdminComponent implements OnInit {
   authService = inject(AuthService);
   cdr = inject(ChangeDetectorRef);
 
-  activeTab: 'users' | 'activity' | 'logs' = 'users';
+  activeTab: 'users' | 'activity' | 'logs' | 'catering' = 'users';
 
   // Users tab
   users: User[] = this.getCachedUsers();
@@ -618,6 +872,14 @@ export class AdminComponent implements OnInit {
   };
   userModalError = '';
   savingUser = false;
+
+  // Catering Staff Salary Audit tab
+  cateringStaff: AdminCateringStaffByPerson[] = [];
+  cateringSummary: CateringSummary | null = null;
+  cateringLogs: CateringStaffPayment[] = [];
+  selectedCateringPerson: AdminCateringStaffByPerson | null = null;
+  showCateringLogsModal = false;
+  loadingCatering = false;
 
   // Monthly Activity tab
   monthlyActivity: MonthlyActivity[] = [];
@@ -641,10 +903,12 @@ export class AdminComponent implements OnInit {
     this.loadUsers();
   }
 
-  switchTab(tab: 'users' | 'activity' | 'logs') {
+  switchTab(tab: 'users' | 'activity' | 'logs' | 'catering') {
     this.activeTab = tab;
     this.cdr.markForCheck();
-    if (tab === 'activity' && this.monthlyActivity.length === 0) {
+    if (tab === 'catering' && this.cateringStaff.length === 0) {
+      this.loadAdminCateringData();
+    } else if (tab === 'activity' && this.monthlyActivity.length === 0) {
       this.loadMonthlyActivity();
     } else if (tab === 'logs' && this.securityLogs.length === 0) {
       this.loadSecurityLogs();
@@ -673,6 +937,59 @@ export class AdminComponent implements OnInit {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  loadAdminCateringData() {
+    this.loadingCatering = true;
+    this.cdr.markForCheck();
+
+    this.apiService.getAdminCateringSummary().subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.cateringSummary = res.data;
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {}
+    });
+
+    this.apiService.getAdminCateringStaffByPerson().subscribe({
+      next: (res) => {
+        this.loadingCatering = false;
+        if (res.success) {
+          this.cateringStaff = res.data;
+        }
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.loadingCatering = false;
+        console.error('Error fetching admin catering staff:', err);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  viewPersonSalaryLogs(person: AdminCateringStaffByPerson) {
+    this.selectedCateringPerson = person;
+    this.cateringLogs = [];
+    this.showCateringLogsModal = true;
+    this.cdr.markForCheck();
+
+    this.apiService.getAdminCateringStaffLogs({ member_id: person.member_id }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.cateringLogs = res.data;
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  closeCateringLogsModal() {
+    this.showCateringLogsModal = false;
+    this.selectedCateringPerson = null;
+    this.cdr.markForCheck();
   }
 
   loadMonthlyActivity() {

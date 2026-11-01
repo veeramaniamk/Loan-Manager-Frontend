@@ -7,7 +7,13 @@ import {
   Person, 
   User, 
   MonthlyActivity, 
-  SecurityLog 
+  SecurityLog,
+  CateringService,
+  CateringMember,
+  CateringServiceStaff,
+  CateringStaffPayment,
+  CateringSummary,
+  AdminCateringStaffByPerson
 } from '../models/loan.model';
 
 @Injectable({
@@ -139,5 +145,157 @@ export class ApiService {
       params = params.set('status_code', statusCode.toString());
     }
     return this.http.get<{ success: boolean; data: SecurityLog[] }>(`${this.baseUrl}/admin/logs`, { params });
+  }
+
+  // ----------------- CATERING SERVICES & STAFF SALARIES -----------------
+
+  getCateringSummary(): Observable<{ success: boolean; data: CateringSummary }> {
+    return this.http.get<{ success: boolean; data: CateringSummary }>(`${this.baseUrl}/catering/summary`);
+  }
+
+  getCateringServices(filters?: {
+    status?: string;
+    search?: string;
+    from_date?: string;
+    to_date?: string;
+  }): Observable<{ success: boolean; data: CateringService[] }> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, val]) => {
+        if (val !== undefined && val !== null && val !== '') {
+          params = params.set(key, val.toString());
+        }
+      });
+    }
+    return this.http.get<{ success: boolean; data: CateringService[] }>(`${this.baseUrl}/catering/services`, { params });
+  }
+
+  getCateringServiceById(id: number): Observable<{ success: boolean; data: CateringService }> {
+    return this.http.get<{ success: boolean; data: CateringService }>(`${this.baseUrl}/catering/services/${id}`);
+  }
+
+  createCateringService(serviceData: any): Observable<{ success: boolean; message: string; serviceId: number }> {
+    return this.http.post<{ success: boolean; message: string; serviceId: number }>(`${this.baseUrl}/catering/services`, serviceData);
+  }
+
+  updateCateringService(id: number, serviceData: any): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(`${this.baseUrl}/catering/services/${id}`, serviceData);
+  }
+
+  deleteCateringService(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/catering/services/${id}`);
+  }
+
+  addCateringStaff(
+    serviceId: number, 
+    staffData: {
+      member_id?: number;
+      new_member?: { name: string; phone: string; role?: string; notes?: string };
+      worked_morning?: boolean;
+      worked_afternoon?: boolean;
+      worked_night?: boolean;
+      rate_per_session?: number;
+      remarks?: string;
+    }
+  ): Observable<{ success: boolean; message: string; staffId: number; sessionCount: number; totalSalary: number }> {
+    return this.http.post<{ success: boolean; message: string; staffId: number; sessionCount: number; totalSalary: number }>(
+      `${this.baseUrl}/catering/services/${serviceId}/staff`, 
+      staffData
+    );
+  }
+
+  updateCateringStaff(
+    serviceId: number, 
+    staffId: number, 
+    data: {
+      worked_morning?: boolean;
+      worked_afternoon?: boolean;
+      worked_night?: boolean;
+      rate_per_session?: number;
+      remarks?: string;
+    }
+  ): Observable<{ success: boolean; message: string; sessionCount: number; totalSalary: number; paidStatus: string }> {
+    return this.http.put<{ success: boolean; message: string; sessionCount: number; totalSalary: number; paidStatus: string }>(
+      `${this.baseUrl}/catering/services/${serviceId}/staff/${staffId}`, 
+      data
+    );
+  }
+
+  removeCateringStaff(serviceId: number, staffId: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(
+      `${this.baseUrl}/catering/services/${serviceId}/staff/${staffId}`
+    );
+  }
+
+  payCateringStaff(
+    serviceId: number, 
+    staffId: number, 
+    paymentData: {
+      amount?: number;
+      payment_date?: string;
+      payment_method?: string;
+      notes?: string;
+    }
+  ): Observable<{ 
+    success: boolean; 
+    message: string; 
+    paymentId: number; 
+    paidAmount: number; 
+    paidStatus: string; 
+    remainingPending: number;
+  }> {
+    return this.http.post<{ 
+      success: boolean; 
+      message: string; 
+      paymentId: number; 
+      paidAmount: number; 
+      paidStatus: string; 
+      remainingPending: number;
+    }>(`${this.baseUrl}/catering/services/${serviceId}/staff/${staffId}/pay`, paymentData);
+  }
+
+  getCateringMembers(): Observable<{ success: boolean; data: CateringMember[] }> {
+    return this.http.get<{ success: boolean; data: CateringMember[] }>(`${this.baseUrl}/catering/members`);
+  }
+
+  createCateringMember(data: any): Observable<{ success: boolean; message: string; memberId: number }> {
+    return this.http.post<{ success: boolean; message: string; memberId: number }>(`${this.baseUrl}/catering/members`, data);
+  }
+
+  updateCateringMember(id: number, data: any): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(`${this.baseUrl}/catering/members/${id}`, data);
+  }
+
+  deleteCateringMember(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/catering/members/${id}`);
+  }
+
+  getCateringPaymentLogs(filters?: { member_id?: number; service_id?: number; limit?: number }): Observable<{ success: boolean; data: CateringStaffPayment[] }> {
+    let params = new HttpParams();
+    if (filters) {
+      if (filters.member_id) params = params.set('member_id', filters.member_id.toString());
+      if (filters.service_id) params = params.set('service_id', filters.service_id.toString());
+      if (filters.limit) params = params.set('limit', filters.limit.toString());
+    }
+    return this.http.get<{ success: boolean; data: CateringStaffPayment[] }>(`${this.baseUrl}/catering/payments/logs`, { params });
+  }
+
+  // Admin Catering Endpoints
+  getAdminCateringSummary(): Observable<{ success: boolean; data: CateringSummary }> {
+    return this.http.get<{ success: boolean; data: CateringSummary }>(`${this.baseUrl}/admin/catering/summary`);
+  }
+
+  getAdminCateringStaffByPerson(): Observable<{ success: boolean; data: AdminCateringStaffByPerson[] }> {
+    return this.http.get<{ success: boolean; data: AdminCateringStaffByPerson[] }>(`${this.baseUrl}/admin/catering/staff-by-person`);
+  }
+
+  getAdminCateringStaffLogs(filters?: { member_id?: number; user_id?: number; limit?: number }): Observable<{ success: boolean; data: CateringStaffPayment[] }> {
+    let params = new HttpParams();
+    if (filters) {
+      if (filters.member_id) params = params.set('member_id', filters.member_id.toString());
+      if (filters.user_id) params = params.set('user_id', filters.user_id.toString());
+      if (filters.limit) params = params.set('limit', filters.limit.toString());
+    }
+    return this.http.get<{ success: boolean; data: CateringStaffPayment[] }>(`${this.baseUrl}/admin/catering/staff-logs`, { params });
   }
 }

@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
-import { DashboardSummary, Loan } from '../../core/models/loan.model';
+import { DashboardSummary, Loan, CateringSummary } from '../../core/models/loan.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,6 +23,9 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
         <div class="dash-actions">
           <a routerLink="/loans" class="btn btn-primary">
             <span>➕ Add New Loan</span>
+          </a>
+          <a routerLink="/catering" class="btn btn-secondary">
+            <span>🍽️ Catering</span>
           </a>
           <button class="btn btn-secondary" (click)="loadDashboard()" [disabled]="loading">
             <span>🔄 Refresh</span>
@@ -326,6 +329,43 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
                   </div>
                 </div>
               }
+            </div>
+          </div>
+        }
+
+        <!-- Catering Operations Snapshot Strip -->
+        @if (cateringSummary && cateringSummary.totalServices > 0) {
+          <div class="card catering-snapshot-card">
+            <div class="catering-snapshot-header">
+              <div>
+                <h4 class="card-section-title">🍽️ Catering Operations & Upcoming Events</h4>
+                <p class="text-muted text-xs">Track upcoming bookings, customer collections & staff shift wages</p>
+              </div>
+              <a routerLink="/catering" class="btn btn-sm btn-primary">
+                Open Catering Manager →
+              </a>
+            </div>
+            <div class="catering-snapshot-grid">
+              <div class="cat-snap-col">
+                <span class="cat-snap-lbl">Upcoming Events</span>
+                <strong class="cat-snap-val text-primary">{{ cateringSummary.upcomingServices }} Events</strong>
+                <span class="text-xs text-muted">{{ cateringSummary.totalUpcomingAmount | currency:'INR':'symbol':'1.0-0' }}</span>
+              </div>
+              <div class="cat-snap-col">
+                <span class="cat-snap-lbl">Pending from Clients</span>
+                <strong class="cat-snap-val text-warning">{{ cateringSummary.totalPendingCustomerAmount | currency:'INR':'symbol':'1.0-0' }}</strong>
+                <span class="text-xs text-muted">To collect</span>
+              </div>
+              <div class="cat-snap-col">
+                <span class="cat-snap-lbl">Total Staff Wages</span>
+                <strong class="cat-snap-val text-danger">{{ cateringSummary.totalStaffSalaryObligation | currency:'INR':'symbol':'1.0-0' }}</strong>
+                <span class="text-xs text-muted">₹300 / shift</span>
+              </div>
+              <div class="cat-snap-col">
+                <span class="cat-snap-lbl">Pending Staff Wages</span>
+                <strong class="cat-snap-val text-success">{{ cateringSummary.pendingStaffSalaryToPay | currency:'INR':'symbol':'1.0-0' }}</strong>
+                <span class="text-xs text-muted">To disburse</span>
+              </div>
             </div>
           </div>
         }
@@ -817,6 +857,46 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
+    .catering-snapshot-card {
+      padding: 1.25rem 1.5rem;
+      margin-top: 1.5rem;
+      border-left: 4px solid #f59e0b;
+    }
+    .catering-snapshot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .catering-snapshot-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 640px) {
+      .catering-snapshot-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .catering-snapshot-card {
+        padding: 0.85rem 1rem;
+      }
+    }
+    .cat-snap-col {
+      display: flex;
+      flex-direction: column;
+    }
+    .cat-snap-lbl {
+      font-size: 0.725rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .cat-snap-val {
+      font-size: 1.2rem;
+      margin: 0.15rem 0;
+    }
   `]
 })
 export class DashboardComponent implements OnInit {
@@ -825,6 +905,7 @@ export class DashboardComponent implements OnInit {
   cdr = inject(ChangeDetectorRef);
 
   summary: DashboardSummary | null = this.getCachedSummary();
+  cateringSummary: CateringSummary | null = null;
   loading = !this.summary;
   errorMessage = '';
 
@@ -874,6 +955,16 @@ export class DashboardComponent implements OnInit {
         console.error('Failed to load dashboard:', err);
         this.cdr.markForCheck();
       }
+    });
+
+    this.apiService.getCateringSummary().subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.cateringSummary = res.data;
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {}
     });
   }
 
