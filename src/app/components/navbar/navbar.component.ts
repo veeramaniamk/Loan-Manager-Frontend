@@ -20,7 +20,7 @@ import { AuthService } from '../../core/services/auth.service';
           </a>
 
           @if (authService.isAuthenticated()) {
-            <nav class="nav-links">
+            <nav class="nav-links desktop-nav-links">
               <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
                 <span class="nav-icon">📊</span> Dashboard
               </a>
@@ -41,14 +41,14 @@ import { AuthService } from '../../core/services/auth.service';
 
         <div class="nav-right">
           @if (authService.isAuthenticated()) {
-            <div class="security-chip" title="Session, Cookie, CSRF & JWT Active">
+            <div class="security-chip desktop-chip" title="Session, Cookie, CSRF & JWT Active">
               <span class="pulse-dot"></span>
               <span>Protected</span>
             </div>
 
             <div class="user-profile">
-              <div class="avatar">{{ userInitials }}</div>
-              <div class="user-info">
+              <div class="avatar" [title]="authService.currentUser()?.full_name || 'User'">{{ userInitials }}</div>
+              <div class="user-info desktop-user-info">
                 <span class="user-name">{{ authService.currentUser()?.full_name }}</span>
                 <span class="user-role badge" [ngClass]="authService.isAdmin() ? 'badge-primary' : 'badge-secondary'">
                   {{ authService.currentUser()?.role }}
@@ -57,7 +57,8 @@ import { AuthService } from '../../core/services/auth.service';
             </div>
 
             <button class="btn btn-secondary btn-sm logout-btn" (click)="onLogout()" title="Log Out">
-              <span>Sign Out</span>
+              <span class="logout-icon">🚪</span>
+              <span class="logout-text">Sign Out</span>
             </button>
           } @else {
             <a routerLink="/login" class="btn btn-primary btn-sm">Sign In</a>
@@ -65,6 +66,30 @@ import { AuthService } from '../../core/services/auth.service';
         </div>
       </div>
     </header>
+
+    <!-- Mobile Bottom Navigation Bar (Android Phone Optimized) -->
+    @if (authService.isAuthenticated()) {
+      <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="bottom-nav-item">
+          <span class="bottom-nav-icon">📊</span>
+          <span class="bottom-nav-label">Dashboard</span>
+        </a>
+        <a routerLink="/loans" routerLinkActive="active" class="bottom-nav-item">
+          <span class="bottom-nav-icon">📜</span>
+          <span class="bottom-nav-label">Loans</span>
+        </a>
+        <a routerLink="/people" routerLinkActive="active" class="bottom-nav-item">
+          <span class="bottom-nav-icon">👥</span>
+          <span class="bottom-nav-label">People</span>
+        </a>
+        @if (authService.isAdmin()) {
+          <a routerLink="/admin" routerLinkActive="active" class="bottom-nav-item">
+            <span class="bottom-nav-icon">🛡️</span>
+            <span class="bottom-nav-label">Admin</span>
+          </a>
+        }
+      </nav>
+    }
   `,
   styles: [`
     .navbar-wrapper {
@@ -195,6 +220,7 @@ import { AuthService } from '../../core/services/auth.service';
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
     }
     .user-info {
       display: flex;
@@ -212,12 +238,107 @@ import { AuthService } from '../../core/services/auth.service';
       align-self: flex-start;
       margin-top: 2px;
     }
-    @media (max-width: 900px) {
-      .brand-subtitle, .security-chip, .user-info {
-        display: none;
+    .logout-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .logout-icon {
+      font-size: 0.95rem;
+    }
+
+    /* Mobile Bottom Navigation Bar */
+    .mobile-bottom-nav {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .desktop-nav-links,
+      .desktop-chip,
+      .desktop-user-info,
+      .brand-subtitle {
+        display: none !important;
       }
       .nav-container {
-        padding: 0.5rem 1rem;
+        padding: 0.5rem 0.85rem;
+        gap: 0.75rem;
+      }
+      .brand {
+        gap: 0.5rem;
+      }
+      .brand-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.4rem;
+      }
+      .brand-title {
+        font-size: 1.05rem;
+      }
+      .nav-right {
+        gap: 0.5rem;
+      }
+      .logout-text {
+        display: none;
+      }
+      .logout-btn {
+        padding: 0.4rem 0.55rem;
+      }
+
+      /* Native Android Bottom Bar */
+      .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 58px;
+        background: #ffffff;
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.06);
+        z-index: 999;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        align-items: center;
+        justify-content: space-around;
+      }
+      .bottom-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        height: 100%;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.68rem;
+        font-weight: 600;
+        transition: all 0.15s ease;
+        position: relative;
+        touch-action: manipulation;
+      }
+      .bottom-nav-item:active {
+        background: #f8fafc;
+      }
+      .bottom-nav-icon {
+        font-size: 1.25rem;
+        line-height: 1;
+        transition: transform 0.15s ease;
+      }
+      .bottom-nav-item.active {
+        color: var(--primary);
+        font-weight: 700;
+      }
+      .bottom-nav-item.active .bottom-nav-icon {
+        transform: scale(1.1);
+      }
+      .bottom-nav-item.active::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        width: 40%;
+        height: 3px;
+        background: var(--primary);
+        border-radius: 0 0 3px 3px;
       }
     }
   `]

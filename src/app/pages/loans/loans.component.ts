@@ -80,8 +80,8 @@ import { Loan, Person, LoanPayment } from '../../core/models/loan.model';
           <button class="btn btn-primary btn-sm" (click)="openAddModal()">Add First Loan</button>
         </div>
       } @else {
-        <!-- Loans Table -->
-        <div class="card loans-table-card">
+        <!-- Desktop Loans Table -->
+        <div class="card loans-table-card desktop-only">
           <div class="table-container">
             <table class="data-table">
               <thead>
@@ -155,6 +155,72 @@ import { Loan, Person, LoanPayment } from '../../core/models/loan.model';
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- Mobile Loan Cards (Android Phone View) -->
+        <div class="mobile-loans-list mobile-only">
+          @for (loan of loans; track loan.id) {
+            <div class="card mobile-loan-card">
+              <div class="mobile-loan-header">
+                <div class="mobile-loan-person">
+                  <strong class="mobile-person-name">{{ loan.person_name }}</strong>
+                  <span class="text-muted mobile-person-phone">{{ loan.person_phone || 'No phone' }}</span>
+                </div>
+                <div class="mobile-loan-badges">
+                  <span class="badge" [ngClass]="loan.type === 'given' ? 'badge-success' : 'badge-danger'">
+                    {{ loan.type === 'given' ? '📥 Lent' : '📤 Borrowed' }}
+                  </span>
+                  <span class="badge" [ngClass]="getStatusBadgeClass(loan.status)">
+                    {{ loan.status }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="mobile-loan-amounts">
+                <div class="mobile-amt-col">
+                  <span class="mobile-amt-lbl">Remaining</span>
+                  <strong class="mobile-remaining-val" [ngClass]="loan.remaining_balance === 0 ? 'text-muted' : (loan.type === 'given' ? 'text-success' : 'text-danger')">
+                    {{ loan.remaining_balance | currency:'INR':'symbol':'1.0-0' }}
+                  </strong>
+                </div>
+                <div class="mobile-amt-col right">
+                  <span class="mobile-amt-lbl">Principal</span>
+                  <span class="mobile-principal-val">
+                    {{ loan.principal_amount | currency:'INR':'symbol':'1.0-0' }}
+                    @if (loan.interest_rate > 0) {
+                      <small class="text-muted">({{ loan.interest_rate }}% Int)</small>
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="mobile-loan-meta">
+                <div class="meta-row">
+                  <span>📅 Given: {{ loan.issue_date | date:'dd MMM yyyy' }}</span>
+                  @if (loan.due_date) {
+                    <span [ngClass]="{'text-danger font-bold': loan.is_overdue, 'text-warning font-bold': loan.is_due_today}">
+                      Due: {{ loan.due_date | date:'dd MMM yyyy' }}
+                    </span>
+                  }
+                </div>
+                <div class="meta-row">
+                  <span class="loc-badge">📍 {{ loan.location || 'Unspecified' }}</span>
+                  @if (loan.notes) {
+                    <span class="mobile-notes text-muted" [title]="loan.notes">💬 {{ loan.notes }}</span>
+                  }
+                </div>
+              </div>
+
+              <div class="mobile-loan-actions">
+                <button class="btn btn-secondary btn-sm flex-1" (click)="openLedgerModal(loan)">
+                  💳 Ledger / Pay
+                </button>
+                <button class="btn btn-danger btn-sm" (click)="deleteLoan(loan)" title="Delete Loan">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          }
         </div>
       }
 
@@ -607,7 +673,146 @@ import { Loan, Person, LoanPayment } from '../../core/models/loan.model';
       }
       .ledger-summary {
         grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        padding: 0.75rem;
       }
+    }
+    @media (max-width: 640px) {
+      .loans-container {
+        padding-top: 1rem;
+        padding-bottom: 1.5rem;
+      }
+      .page-header {
+        margin-bottom: 1rem;
+        gap: 0.75rem;
+      }
+      .page-title {
+        font-size: 1.45rem;
+      }
+      .page-subtitle {
+        font-size: 0.825rem;
+      }
+      .page-header .btn {
+        width: 100%;
+      }
+      .filter-card {
+        padding: 0.85rem;
+        margin-bottom: 1rem;
+      }
+      .filter-grid {
+        gap: 0.75rem;
+      }
+      .form-row {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .record-pay-box {
+        padding: 0.85rem;
+        margin-bottom: 1rem;
+      }
+      .type-selector {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .label-with-action {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+      }
+      .label-with-action .loc-btn {
+        width: 100%;
+        text-align: center;
+      }
+    }
+
+    /* Mobile Loans List & Cards */
+    .mobile-loans-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .mobile-loan-card {
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .mobile-loan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .mobile-loan-person {
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-person-name {
+      font-size: 1rem;
+      color: #0f172a;
+    }
+    .mobile-person-phone {
+      font-size: 0.75rem;
+    }
+    .mobile-loan-badges {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .mobile-loan-amounts {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      background: #f8fafc;
+      padding: 0.65rem 0.85rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+    }
+    .mobile-amt-col {
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-amt-col.right {
+      align-items: flex-end;
+    }
+    .mobile-amt-lbl {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .mobile-remaining-val {
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+    .mobile-principal-val {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .mobile-loan-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      color: #475569;
+    }
+    .mobile-loan-meta .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .mobile-notes {
+      font-style: italic;
+    }
+    .mobile-loan-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
     }
     .history-title {
       font-size: 1rem;

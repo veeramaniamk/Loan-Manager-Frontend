@@ -246,8 +246,45 @@ import { Person, Loan } from '../../core/models/loan.model';
     }
     .people-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.25rem;
+    }
+    @media (max-width: 640px) {
+      .people-container {
+        padding-top: 1rem;
+        padding-bottom: 1.5rem;
+      }
+      .page-header {
+        margin-bottom: 1rem;
+        gap: 0.75rem;
+      }
+      .page-title {
+        font-size: 1.45rem;
+      }
+      .page-subtitle {
+        font-size: 0.825rem;
+      }
+      .page-header .btn {
+        width: 100%;
+      }
+      .search-card {
+        padding: 0.65rem 0.85rem;
+        margin-bottom: 1rem;
+      }
+      .people-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+      }
+      .person-card {
+        padding: 1rem;
+      }
+      .person-actions .icon-btn {
+        min-width: 36px;
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
     .person-card {
       display: flex;

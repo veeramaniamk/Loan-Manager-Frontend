@@ -412,6 +412,12 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
       padding-top: 2rem;
       padding-bottom: 3rem;
     }
+    @media (max-width: 768px) {
+      .dashboard-container {
+        padding-top: 1rem;
+        padding-bottom: 1.5rem;
+      }
+    }
     .dash-header {
       display: flex;
       justify-content: space-between;
@@ -433,6 +439,26 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
     .dash-actions {
       display: flex;
       gap: 0.75rem;
+    }
+    @media (max-width: 640px) {
+      .dash-header {
+        margin-bottom: 1.25rem;
+        gap: 0.75rem;
+      }
+      .dash-title {
+        font-size: 1.45rem;
+      }
+      .dash-subtitle {
+        font-size: 0.825rem;
+      }
+      .dash-actions {
+        width: 100%;
+      }
+      .dash-actions .btn {
+        flex: 1;
+        font-size: 0.825rem;
+        padding: 0.55rem 0.75rem;
+      }
     }
     .loading-state {
       text-align: center;
@@ -457,6 +483,18 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
       gap: 1.25rem;
       margin-bottom: 1.5rem;
     }
+    @media (max-width: 640px) {
+      .metrics-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+    }
+    @media (max-width: 380px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
     .metric-card {
       background: #ffffff;
       border: 1px solid var(--border-color);
@@ -467,6 +505,12 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
       flex-direction: column;
       position: relative;
       overflow: hidden;
+    }
+    @media (max-width: 640px) {
+      .metric-card {
+        padding: 0.85rem;
+        border-radius: var(--radius-md);
+      }
     }
     .metric-card::before {
       content: '';
@@ -502,11 +546,34 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
       font-weight: 800;
       line-height: 1.1;
       margin-bottom: 0.5rem;
+      word-break: break-word;
+    }
+    @media (max-width: 640px) {
+      .metric-header {
+        margin-bottom: 0.4rem;
+        gap: 0.35rem;
+      }
+      .metric-icon {
+        font-size: 1.1rem;
+      }
+      .metric-label {
+        font-size: 0.68rem;
+      }
+      .metric-value {
+        font-size: 1.35rem;
+        margin-bottom: 0.25rem;
+      }
     }
     .metric-footer {
       font-size: 0.775rem;
       color: var(--text-muted);
       margin-top: auto;
+    }
+    @media (max-width: 640px) {
+      .metric-footer {
+        font-size: 0.68rem;
+        line-height: 1.25;
+      }
     }
     .net-summary-strip {
       background: #ffffff;
@@ -532,6 +599,25 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
     .net-val {
       font-size: 1.15rem;
       font-weight: 800;
+    }
+    @media (max-width: 640px) {
+      .net-summary-strip {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+      }
+      .net-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .net-title {
+        font-size: 0.8rem;
+      }
+      .net-val {
+        font-size: 0.95rem;
+      }
     }
     .urgent-banner {
       background: #fffbeb;
@@ -570,6 +656,24 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
       font-size: 0.875rem;
       color: #475569;
     }
+    @media (max-width: 640px) {
+      .urgent-banner {
+        padding: 0.85rem 1rem;
+        margin-bottom: 1rem;
+      }
+      .urgent-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+        padding: 0.65rem 0.75rem;
+      }
+      .urgent-desc {
+        font-size: 0.8rem;
+      }
+      .urgent-item .btn {
+        width: 100%;
+      }
+    }
     .split-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -583,6 +687,25 @@ import { DashboardSummary, Loan } from '../../core/models/loan.model';
     }
     .table-card {
       padding: 1.25rem;
+    }
+    @media (max-width: 640px) {
+      .table-card {
+        padding: 0.85rem;
+      }
+      .table-title {
+        font-size: 1.05rem;
+      }
+      .location-card {
+        padding: 0.85rem 1rem !important;
+      }
+      .loc-chip {
+        min-width: 140px !important;
+        padding: 0.6rem 0.75rem !important;
+      }
+      .modal-info-bar {
+        flex-direction: column;
+        gap: 0.35rem;
+      }
     }
     .table-card-header {
       display: flex;

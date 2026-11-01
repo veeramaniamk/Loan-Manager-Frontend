@@ -420,6 +420,62 @@ import { User, MonthlyActivity, SecurityLog } from '../../core/models/loan.model
       margin-bottom: 1.5rem;
       flex-wrap: wrap;
     }
+    @media (max-width: 768px) {
+      .admin-container {
+        padding-top: 1rem;
+        padding-bottom: 1.5rem;
+      }
+      .page-header {
+        margin-bottom: 1rem;
+      }
+      .page-title {
+        font-size: 1.45rem;
+      }
+      .page-subtitle {
+        font-size: 0.825rem;
+      }
+      .admin-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+        margin-bottom: 1rem;
+        gap: 0.25rem;
+      }
+      .admin-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .tab-link {
+        flex-shrink: 0;
+        padding: 0.6rem 0.85rem !important;
+        font-size: 0.8rem !important;
+        white-space: nowrap;
+      }
+      .content-action-bar {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 0.75rem !important;
+        margin-bottom: 1rem !important;
+      }
+      .content-action-bar .btn {
+        width: 100%;
+      }
+      .form-row {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .log-meta-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+        padding: 0.75rem !important;
+      }
+      .json-box {
+        font-size: 0.725rem !important;
+        padding: 0.75rem !important;
+        max-height: 180px !important;
+      }
+    }
     .tab-link {
       background: none;
       border: none;

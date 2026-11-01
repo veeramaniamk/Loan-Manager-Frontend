@@ -69,6 +69,36 @@ a {
   padding: 1.5rem;
 }
 
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0.75rem;
+  }
+}
+
+/* Visibility Utilities */
+.mobile-only {
+  display: none !important;
+}
+
+.desktop-only {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block !important;
+  }
+  .desktop-only {
+    display: none !important;
+  }
+}
+
 /* Typography Helpers */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
@@ -114,6 +144,8 @@ h1, h2, h3, h4, h5, h6 {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
+  touch-action: manipulation;
+  min-height: 40px;
 }
 
 .btn:active {
@@ -176,6 +208,13 @@ h1, h2, h3, h4, h5, h6 {
   transition: box-shadow 0.2s ease;
 }
 
+@media (max-width: 640px) {
+  .card {
+    padding: 1rem;
+    border-radius: var(--radius-md);
+  }
+}
+
 .card:hover {
   box-shadow: var(--shadow-md);
 }
@@ -196,7 +235,7 @@ h1, h2, h3, h4, h5, h6 {
 .form-control {
   width: 100%;
   padding: 0.625rem 0.875rem;
-  font-size: 0.875rem;
+  font-size: 0.925rem;
   font-family: inherit;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -204,6 +243,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-main);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   outline: none;
+  min-height: 42px;
 }
 
 .form-control:focus {
@@ -221,6 +261,8 @@ textarea.form-control {
   overflow-x: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 table.data-table {
@@ -240,7 +282,7 @@ table.data-table th {
 }
 
 table.data-table td {
-  padding: 1rem;
+  padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
 }
@@ -260,7 +302,7 @@ table.data-table tr:hover td {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -292,6 +334,7 @@ table.data-table tr:hover td {
 
 .modal-body {
   padding: 1.5rem;
+  overflow-y: auto;
 }
 
 .modal-footer {
@@ -303,6 +346,35 @@ table.data-table tr:hover td {
   justify-content: flex-end;
   gap: 0.75rem;
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .modal-dialog {
+    max-height: 88vh;
+    border-radius: 20px 20px 0 0;
+    max-width: 100%;
+    animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .modal-header {
+    padding: 1rem 1.25rem;
+  }
+  .modal-body {
+    padding: 1.15rem 1.25rem;
+  }
+  .modal-footer {
+    padding: 0.85rem 1.25rem;
+    padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    border-radius: 0;
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 @keyframes fadeIn {

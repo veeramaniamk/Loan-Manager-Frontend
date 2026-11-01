@@ -133,6 +133,11 @@ import { AuthService } from '../../core/services/auth.service';
       padding: 2rem 1rem;
       background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     }
+    @media (max-width: 480px) {
+      .auth-page {
+        padding: 1rem 0.75rem;
+      }
+    }
     .auth-card {
       background: #ffffff;
       border: 1px solid var(--border-color);
@@ -141,6 +146,32 @@ import { AuthService } from '../../core/services/auth.service';
       width: 100%;
       max-width: 440px;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+    }
+    @media (max-width: 480px) {
+      .auth-card {
+        padding: 1.25rem 1rem;
+        border-radius: var(--radius-md);
+      }
+      .auth-header {
+        margin-bottom: 1.25rem;
+      }
+      .auth-logo {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+      .auth-title {
+        font-size: 1.25rem;
+      }
+      .auth-desc {
+        font-size: 0.8rem;
+      }
+      .demo-buttons {
+        flex-direction: column !important;
+        gap: 0.4rem !important;
+      }
+      .demo-buttons .btn {
+        width: 100%;
+      }
     }
     .auth-header {
       text-align: center;
