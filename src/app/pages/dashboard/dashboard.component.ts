@@ -27,6 +27,9 @@ import { DashboardSummary, Loan, CateringSummary } from '../../core/models/loan.
           <a routerLink="/catering" class="btn btn-secondary">
             <span>🍽️ Catering</span>
           </a>
+          <a routerLink="/expenses" class="btn btn-secondary">
+            <span>💸 Daily Expenses</span>
+          </a>
           <button class="btn btn-secondary" (click)="loadDashboard()" [disabled]="loading">
             <span>🔄 Refresh</span>
           </button>

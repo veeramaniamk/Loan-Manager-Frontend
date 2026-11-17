@@ -13,7 +13,11 @@ import {
   CateringServiceStaff,
   CateringStaffPayment,
   CateringSummary,
-  AdminCateringStaffByPerson
+  AdminCateringStaffByPerson,
+  DailyExpense,
+  ExpenseTag,
+  ExpensePaymentMethod,
+  ExpenseOverviewSummary
 } from '../models/loan.model';
 
 @Injectable({
@@ -297,5 +301,99 @@ export class ApiService {
       if (filters.limit) params = params.set('limit', filters.limit.toString());
     }
     return this.http.get<{ success: boolean; data: CateringStaffPayment[] }>(`${this.baseUrl}/admin/catering/staff-logs`, { params });
+  }
+
+  // ==========================================
+  // 💸 DAILY EXPENSES & TAGS ENDPOINTS
+  // ==========================================
+
+  getExpenses(filters?: {
+    search?: string;
+    tag_id?: number | string;
+    payment_type?: string;
+    payment_method_id?: number | string;
+    from_date?: string;
+    to_date?: string;
+    month?: number | string;
+    year?: number | string;
+  }): Observable<{ success: boolean; data: DailyExpense[] }> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, val]) => {
+        if (val !== undefined && val !== null && val !== '') {
+          params = params.set(key, val.toString());
+        }
+      });
+    }
+    return this.http.get<{ success: boolean; data: DailyExpense[] }>(`${this.baseUrl}/expenses`, { params });
+  }
+
+  createExpense(data: {
+    title: string;
+    amount: number;
+    expense_date?: string;
+    tag_id?: number | null;
+    payment_type?: 'cash' | 'upi' | 'other';
+    payment_method_id?: number | null;
+    payment_app_name?: string;
+    notes?: string;
+  }): Observable<{ success: boolean; message: string; expenseId: number }> {
+    return this.http.post<{ success: boolean; message: string; expenseId: number }>(`${this.baseUrl}/expenses`, data);
+  }
+
+  updateExpense(id: number, data: {
+    title: string;
+    amount: number;
+    expense_date: string;
+    tag_id?: number | null;
+    payment_type?: 'cash' | 'upi' | 'other';
+    payment_method_id?: number | null;
+    payment_app_name?: string;
+    notes?: string;
+  }): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(`${this.baseUrl}/expenses/${id}`, data);
+  }
+
+  deleteExpense(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/expenses/${id}`);
+  }
+
+  getExpenseOverview(mode: 'monthly' | 'yearly' = 'monthly', year?: number, month?: number): Observable<{ success: boolean; data: ExpenseOverviewSummary }> {
+    let params = new HttpParams().set('mode', mode);
+    if (year) params = params.set('year', year.toString());
+    if (month && mode === 'monthly') params = params.set('month', month.toString());
+    return this.http.get<{ success: boolean; data: ExpenseOverviewSummary }>(`${this.baseUrl}/expenses/overview`, { params });
+  }
+
+  getExpenseTags(): Observable<{ success: boolean; data: ExpenseTag[] }> {
+    return this.http.get<{ success: boolean; data: ExpenseTag[] }>(`${this.baseUrl}/expenses/tags`);
+  }
+
+  createExpenseTag(tag: { name: string; color?: string; icon?: string }): Observable<{ success: boolean; message: string; data: ExpenseTag }> {
+    return this.http.post<{ success: boolean; message: string; data: ExpenseTag }>(`${this.baseUrl}/expenses/tags`, tag);
+  }
+
+  updateExpenseTag(id: number, tag: { name: string; color?: string; icon?: string }): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(`${this.baseUrl}/expenses/tags/${id}`, tag);
+  }
+
+  deleteExpenseTag(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/expenses/tags/${id}`);
+  }
+
+  getExpensePaymentMethods(): Observable<{ success: boolean; data: ExpensePaymentMethod[] }> {
+    return this.http.get<{ success: boolean; data: ExpensePaymentMethod[] }>(`${this.baseUrl}/expenses/payment-methods`);
+  }
+
+  createExpensePaymentMethod(method: { type: string; name: string; icon?: string; is_default?: boolean }): Observable<{ success: boolean; message: string; data: ExpensePaymentMethod }> {
+    return this.http.post<{ success: boolean; message: string; data: ExpensePaymentMethod }>(`${this.baseUrl}/expenses/payment-methods`, method);
+  }
+
+  updateExpensePaymentMethod(id: number, method: { type?: string; name?: string; icon?: string; status?: string; is_default?: boolean }): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(`${this.baseUrl}/expenses/payment-methods/${id}`, method);
+  }
+
+  deleteExpensePaymentMethod(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/expenses/payment-methods/${id}`);
   }
 }

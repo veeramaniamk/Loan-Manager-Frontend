@@ -30,6 +30,9 @@ import { AuthService } from '../../core/services/auth.service';
               <a routerLink="/catering" routerLinkActive="active" class="nav-item">
                 <span class="nav-icon">🍽️</span> Catering
               </a>
+              <a routerLink="/expenses" routerLinkActive="active" class="nav-item">
+                <span class="nav-icon">💸</span> Daily Expenses
+              </a>
               <a routerLink="/people" routerLinkActive="active" class="nav-item">
                 <span class="nav-icon">👥</span> People
               </a>
@@ -84,6 +87,10 @@ import { AuthService } from '../../core/services/auth.service';
         <a routerLink="/catering" routerLinkActive="active" class="bottom-nav-item">
           <span class="bottom-nav-icon">🍽️</span>
           <span class="bottom-nav-label">Catering</span>
+        </a>
+        <a routerLink="/expenses" routerLinkActive="active" class="bottom-nav-item">
+          <span class="bottom-nav-icon">💸</span>
+          <span class="bottom-nav-label">Expenses</span>
         </a>
         <a routerLink="/people" routerLinkActive="active" class="bottom-nav-item">
           <span class="bottom-nav-icon">👥</span>

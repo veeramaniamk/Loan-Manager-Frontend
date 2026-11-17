@@ -229,3 +229,101 @@ export interface AdminCateringStaffByPerson {
   pending_balance: number;
   created_at?: string;
 }
+
+// ----------------- DAILY EXPENSES & TAGS MODELS -----------------
+
+export interface ExpenseTag {
+  id: number;
+  user_id: number;
+  name: string;
+  color: string;
+  icon: string;
+  expense_count?: number;
+  total_spent?: number;
+  created_at?: string;
+}
+
+export interface ExpensePaymentMethod {
+  id: number;
+  user_id: number;
+  type: 'cash' | 'upi' | 'other';
+  name: string;
+  icon: string;
+  is_default: boolean;
+  status: 'active' | 'inactive';
+  expense_count?: number;
+  total_spent?: number;
+  created_at?: string;
+}
+
+export interface DailyExpense {
+  id: number;
+  user_id: number;
+  title: string;
+  amount: number;
+  expense_date: string;
+  tag_id?: number | null;
+  tag_name?: string;
+  tag_color?: string;
+  tag_icon?: string;
+  payment_type: 'cash' | 'upi' | 'other';
+  payment_method_id?: number | null;
+  payment_app_name?: string;
+  method_name?: string;
+  method_icon?: string;
+  notes?: string;
+  created_at?: string;
+}
+
+export interface ExpenseTagBreakdown {
+  tag_id: number | null;
+  tag_name: string;
+  tag_color: string;
+  tag_icon: string;
+  total_amount: number;
+  count: number;
+  percentage: number;
+}
+
+export interface ExpensePaymentBreakdown {
+  payment_type: 'cash' | 'upi' | 'other';
+  method_name: string;
+  method_icon: string;
+  total_amount: number;
+  count: number;
+  percentage: number;
+}
+
+export interface ExpenseDailyItem {
+  date: string;
+  day: number;
+  total_amount: number;
+  count: number;
+}
+
+export interface ExpenseMonthlyItem {
+  month: number;
+  monthName: string;
+  total_amount: number;
+  count: number;
+  percentage: number;
+}
+
+export interface ExpenseOverviewSummary {
+  mode: 'monthly' | 'yearly';
+  year: number;
+  month?: number;
+  monthName?: string;
+  totalSpent: number;
+  dailyAverage?: number;
+  monthlyAverage?: number;
+  todaySpent: number;
+  transactionsCount: number;
+  cashSpent: number;
+  upiSpent: number;
+  highestMonth?: { month: number; monthName: string; amount: number } | null;
+  tagBreakdown: ExpenseTagBreakdown[];
+  paymentBreakdown: ExpensePaymentBreakdown[];
+  dailyBreakdown?: ExpenseDailyItem[];
+  monthlyBreakdown?: ExpenseMonthlyItem[];
+}

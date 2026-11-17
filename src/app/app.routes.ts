@@ -4,6 +4,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { LoansComponent } from './pages/loans/loans.component';
 import { PeopleComponent } from './pages/people/people.component';
 import { CateringComponent } from './pages/catering/catering.component';
+import { ExpensesComponent } from './pages/expenses/expenses.component';
 import { AdminComponent } from './pages/admin/admin.component';
 import { authGuard, adminGuard, publicGuard } from './core/guards/auth.guard';
 
@@ -26,6 +27,11 @@ export const routes: Routes = [
   {
     path: 'catering',
     component: CateringComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'expenses',
+    component: ExpensesComponent,
     canActivate: [authGuard]
   },
   {
