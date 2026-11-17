@@ -56,15 +56,15 @@ import {
       }
 
       <!-- ======================================================== -->
-      <!-- 1. 👥 USER SELECTOR: SELECT MONITORED ACCOUNT -->
+      <!-- 1. 📧 STEP 1: SELECT MONITORED USER BY EMAIL -->
       <!-- ======================================================== -->
       <div class="user-selector-card">
         <div class="user-selector-header">
           <div class="d-flex align-items-center gap-2">
             <span class="step-indicator">Step 1</span>
             <div>
-              <h3 class="user-selector-title">Select Monitored User Account</h3>
-              <p class="user-selector-desc">Select an account below to inspect its devices, live SMS stream, and permission controls</p>
+              <h3 class="user-selector-title">Select Monitored User Account by Email</h3>
+              <p class="user-selector-desc">Select an account below to inspect its devices, live SMS stream, and permission controls (direct admin access)</p>
             </div>
           </div>
           <button class="btn btn-outline btn-sm" (click)="openAddUserModal()">
@@ -72,12 +72,33 @@ import {
           </button>
         </div>
 
+        <!-- Quick Email Dropdown Selector -->
+        <div class="email-dropdown-wrap mb-3">
+          <label class="form-label-xs font-bold text-muted">🎯 Active Monitored Account Email:</label>
+          <div class="d-flex gap-2 align-items-center flex-wrap">
+            <select 
+              class="form-control email-select-input" 
+              [(ngModel)]="selectedEmail" 
+              (change)="selectUserByEmail(selectedEmail)">
+              @for (u of smsUsers; track u.id) {
+                <option [value]="u.email">
+                  {{ getUserAvatar(u.user_type) }} {{ u.email }} — {{ u.name || 'User' }} ({{ formatUserType(u.user_type) }} • {{ u.total_messages_count || 0 }} Messages)
+                </option>
+              }
+            </select>
+            <button class="btn btn-secondary btn-sm" (click)="selectUserByEmail('alagappantk@gmail.com')">
+              <span>👨‍🦳 Quick Select Appa (Dad)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Interactive User Account Cards -->
         <div class="user-cards-grid">
           @for (u of smsUsers; track u.id) {
             <div 
               class="user-card" 
-              [class.selected]="selectedUser?.id === u.id" 
-              (click)="selectUser(u)"
+              [class.selected]="selectedEmail === u.email" 
+              (click)="selectUserByEmail(u.email)"
               [title]="'Select ' + (u.name || u.email)">
               
               <div class="user-card-top">
@@ -85,7 +106,7 @@ import {
                   <span class="user-avatar-icon">
                     {{ getUserAvatar(u.user_type) }}
                   </span>
-                  @if (selectedUser?.id === u.id) {
+                  @if (selectedEmail === u.email) {
                     <span class="selected-badge" title="Currently Active Account">✓</span>
                   }
                 </div>
@@ -107,7 +128,7 @@ import {
                 </div>
                 <div class="user-stat-chip">
                   <span class="chip-label">📩 Messages</span>
-                  <span class="chip-val">{{ u.total_messages_count || 0 }}</span>
+                  <span class="chip-val font-extrabold text-primary">{{ u.total_messages_count || 0 }}</span>
                 </div>
                 <div class="user-stat-chip">
                   <span class="chip-label">🔔 Push</span>
@@ -148,16 +169,16 @@ import {
                 </span>
               </div>
               <div class="ribbon-meta-row">
-                <span>✉️ {{ selectedUser.email }}</span>
+                <span>✉️ <strong>{{ selectedUser.email }}</strong></span>
                 <span>•</span>
-                <span>📱 <strong>{{ selectedUserSummary?.stats?.devicesCount || devices.length }}</strong> Devices</span>
+                <span>📱 <strong>{{ devices.length }}</strong> Devices</span>
                 <span>•</span>
-                <span>📩 <strong>{{ selectedUserSummary?.stats?.totalMessages || messages.length }}</strong> Messages</span>
+                <span>📩 <strong>{{ totalMessagesCount }}</strong> Total Messages</span>
                 <span>•</span>
-                <span class="text-warning">🔑 <strong>{{ selectedUserSummary?.stats?.otpMessages || 0 }}</strong> OTPs</span>
-                @if ((selectedUserSummary?.stats?.unreadMessages || 0) > 0) {
+                <span class="text-warning">🔑 <strong>{{ recentOtpCount }}</strong> OTPs</span>
+                @if (unreadMessagesCount > 0) {
                   <span class="badge badge-danger">
-                    {{ selectedUserSummary?.stats?.unreadMessages }} Unread
+                    {{ unreadMessagesCount }} Unread
                   </span>
                 }
               </div>
@@ -186,7 +207,7 @@ import {
             [class.active]="activeSubTab === 'messages'" 
             (click)="switchSubTab('messages')">
             <span>📩 Live SMS & OTPs</span>
-            <span class="count-pill">{{ messages.length }}</span>
+            <span class="count-pill">{{ totalMessagesCount }}</span>
           </button>
           <button 
             class="sub-nav-btn" 
@@ -223,6 +244,41 @@ import {
         <!-- ======================================================== -->
         @if (activeSubTab === 'messages') {
           <div class="tab-pane fade-in">
+            <!-- Device Selector Pills Toolbar -->
+            <div class="device-selector-toolbar card mb-3">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <span class="device-toolbar-label">📱 Select Device:</span>
+                  <button 
+                    class="btn btn-sm" 
+                    [ngClass]="filterDeviceId === 'all' ? 'btn-primary' : 'btn-outline'" 
+                    (click)="setDeviceFilter('all')">
+                    All Devices ({{ totalMessagesCount }})
+                  </button>
+                  @for (dev of devices; track dev.id) {
+                    <button 
+                      class="btn btn-sm" 
+                      [ngClass]="filterDeviceId === dev.id.toString() ? 'btn-primary' : 'btn-outline'" 
+                      (click)="setDeviceFilter(dev.id.toString())">
+                      📱 {{ dev.device_name }} ({{ dev.phone_number || 'SIM 1' }}) 
+                      <span class="badge ml-1" [ngClass]="filterDeviceId === dev.id.toString() ? 'badge-dark' : 'badge-secondary'">
+                        {{ dev.total_messages || 0 }}
+                      </span>
+                    </button>
+                  }
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-secondary btn-sm" (click)="markAllAsRead()" title="Mark all messages as read">
+                    <span>Mark All Read</span>
+                  </button>
+                  <button class="btn btn-outline btn-sm" (click)="loadUserMessages()" [disabled]="loading">
+                    <span>🔄 Refresh Messages</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <!-- Filters Toolbar -->
             <div class="card filter-toolbar">
               <div class="filter-row">
@@ -232,57 +288,67 @@ import {
                   <input 
                     type="text" 
                     class="form-control form-control-sm" 
-                    placeholder="Search SBI, HDFC, OTP, bill, amount..." 
+                    placeholder="Search Google, WhatsApp, SBI, HDFC, OTP, amount..." 
                     [(ngModel)]="searchQuery" 
-                    (input)="applyMessageFilters()">
-                </div>
-
-                <!-- Device filter -->
-                <div class="filter-col">
-                  <label class="form-label-xs">📱 Device</label>
-                  <select class="form-control form-control-sm" [(ngModel)]="filterDeviceId" (change)="loadUserMessages()">
-                    <option value="all">All Devices ({{ devices.length }})</option>
-                    @for (dev of devices; track dev.id) {
-                      <option [value]="dev.id">{{ dev.device_name }}</option>
-                    }
-                  </select>
+                    (input)="onSearchInput()">
                 </div>
 
                 <!-- Type filter -->
                 <div class="filter-col">
-                  <label class="form-label-xs">🏷️ Message Type</label>
-                  <select class="form-control form-control-sm" [(ngModel)]="filterType" (change)="applyMessageFilters()">
+                  <label class="form-label-xs">🏷️ Category</label>
+                  <select class="form-control form-control-sm" [(ngModel)]="filterType" (change)="onFilterChange()">
                     <option value="all">All Categories</option>
                     <option value="OTP">OTP Verification</option>
                     <option value="Bank Credit">Bank Credit</option>
                     <option value="Bank Debit">Bank Debit</option>
                     <option value="Bill Alert">Bill Alert</option>
                     <option value="Telecom">Telecom</option>
+                    <option value="inbox">Inbox</option>
                   </select>
                 </div>
 
                 <!-- Read status -->
                 <div class="filter-col">
                   <label class="form-label-xs">Read Status</label>
-                  <select class="form-control form-control-sm" [(ngModel)]="filterReadStatus" (change)="applyMessageFilters()">
+                  <select class="form-control form-control-sm" [(ngModel)]="filterReadStatus" (change)="onFilterChange()">
                     <option value="all">All Messages</option>
                     <option value="0">Unread Only</option>
                     <option value="1">Read Only</option>
                   </select>
                 </div>
 
-                <!-- Quick action -->
+                <!-- Page Size -->
                 <div class="filter-col action-col">
-                  <label class="form-label-xs">&nbsp;</label>
-                  <button class="btn btn-secondary btn-sm" (click)="markAllAsRead()" title="Mark all messages as read">
-                    <span>Mark All Read</span>
-                  </button>
+                  <label class="form-label-xs">Per Page</label>
+                  <select class="form-control form-control-sm" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+                    <option [value]="25">25</option>
+                    <option [value]="50">50</option>
+                    <option [value]="100">100</option>
+                  </select>
                 </div>
               </div>
             </div>
 
+            <!-- Pagination Bar (Top) -->
+            @if (totalMessagesCount > 0) {
+              <div class="pagination-bar mb-3">
+                <span class="pagination-info">
+                  Showing <strong>{{ getPageStart() }}</strong> - <strong>{{ getPageEnd() }}</strong> of <strong>{{ totalMessagesCount }}</strong> Messages
+                </span>
+                <div class="pagination-controls">
+                  <button class="btn btn-outline btn-sm" [disabled]="currentPage <= 1 || loading" (click)="goToPage(currentPage - 1)">
+                    ◀ Prev
+                  </button>
+                  <span class="page-indicator">Page {{ currentPage }} of {{ totalPages }}</span>
+                  <button class="btn btn-outline btn-sm" [disabled]="currentPage >= totalPages || loading" (click)="goToPage(currentPage + 1)">
+                    Next ▶
+                  </button>
+                </div>
+              </div>
+            }
+
             <!-- Messages Stream Cards -->
-            @if (filteredMessages.length === 0) {
+            @if (filteredMessages.length === 0 && !loading) {
               <div class="card empty-stream-card">
                 <span class="empty-emoji">📭</span>
                 <h3>No SMS Messages Found</h3>
@@ -311,7 +377,7 @@ import {
                               <span class="badge badge-danger new-badge">NEW</span>
                             }
                           </div>
-                          <span class="device-tag">📱 {{ msg.device_name }} ({{ msg.device_phone || 'SIM 1' }})</span>
+                          <span class="device-tag">📱 {{ msg.device_name || 'Appa' }} ({{ msg.device_phone || '9943370203' }})</span>
                         </div>
                       </div>
 
@@ -367,6 +433,23 @@ import {
                   </div>
                 }
               </div>
+
+              <!-- Pagination Bar (Bottom) -->
+              @if (totalPages > 1) {
+                <div class="pagination-bar mt-3">
+                  <span class="pagination-info">
+                    Page {{ currentPage }} of {{ totalPages }} ({{ totalMessagesCount }} total)
+                  </span>
+                  <div class="pagination-controls">
+                    <button class="btn btn-outline btn-sm" [disabled]="currentPage <= 1 || loading" (click)="goToPage(currentPage - 1)">
+                      ◀ Prev
+                    </button>
+                    <button class="btn btn-outline btn-sm" [disabled]="currentPage >= totalPages || loading" (click)="goToPage(currentPage + 1)">
+                      Next ▶
+                    </button>
+                  </div>
+                </div>
+              }
             }
           </div>
         }
@@ -413,7 +496,7 @@ import {
                     <div class="device-stats-grid">
                       <div class="device-stat">
                         <span class="stat-lbl">Total SMS</span>
-                        <strong class="stat-num">{{ dev.total_messages || 0 }}</strong>
+                        <strong class="stat-num text-primary">{{ dev.total_messages || 0 }}</strong>
                       </div>
                       <div class="device-stat">
                         <span class="stat-lbl">Unread</span>
@@ -707,7 +790,7 @@ import {
         <div class="card empty-stream-card mt-4">
           <span class="empty-emoji">👆</span>
           <h3>Please Select an Account Above</h3>
-          <p class="text-muted">Choose an account (e.g. Appa/Dad or Veera) from Step 1 above to load monitored SMS data and controls.</p>
+          <p class="text-muted">Choose an account (e.g. alagappantk@gmail.com / Appa) from Step 1 above to load monitored SMS data and controls.</p>
         </div>
       }
 
@@ -736,7 +819,7 @@ import {
                 <input 
                   type="text" 
                   class="form-control" 
-                  placeholder="e.g. AX-SBINB, VK-HDFCBK, VM-AIRTEL" 
+                  placeholder="e.g. AX-SBINB, VK-HDFCBK, VM-AIRTEL, Google" 
                   [(ngModel)]="simulateFormData.sender">
               </div>
 
@@ -748,6 +831,7 @@ import {
                   <option value="Bank Debit">Bank Debit</option>
                   <option value="Bill Alert">Bill Alert</option>
                   <option value="Telecom">Telecom Alert</option>
+                  <option value="inbox">Inbox</option>
                 </select>
               </div>
 
@@ -1039,6 +1123,18 @@ import {
       color: var(--text-muted);
       margin: 0.15rem 0 0;
     }
+    .email-dropdown-wrap {
+      background: #f8fafc;
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+    }
+    .email-select-input {
+      font-size: 0.95rem;
+      font-weight: 700;
+      min-width: 320px;
+      flex: 1;
+    }
     .user-cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -1275,10 +1371,22 @@ import {
       color: #ffffff;
     }
 
+    /* Device Selector Toolbar */
+    .device-selector-toolbar {
+      padding: 0.75rem 1.25rem;
+      background: #ffffff;
+      border-left: 4px solid var(--primary);
+    }
+    .device-toolbar-label {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
     /* Filter Toolbar */
     .filter-toolbar {
       padding: 0.85rem 1.25rem;
-      margin-bottom: 1.25rem;
+      margin-bottom: 0.75rem;
     }
     .filter-row {
       display: flex;
@@ -1308,6 +1416,31 @@ import {
       min-height: 36px;
       padding: 0.35rem 0.65rem;
       font-size: 0.85rem;
+    }
+
+    /* Pagination Bar */
+    .pagination-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 1rem;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 0.825rem;
+    }
+    .pagination-info {
+      color: var(--text-muted);
+    }
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .page-indicator {
+      font-weight: 700;
+      color: var(--text-main);
+      padding: 0 0.5rem;
     }
 
     /* Messages Stream */
@@ -1707,6 +1840,7 @@ export class SmsGatewayPanelComponent implements OnInit {
 
   // Users & Selected User Scope
   smsUsers: SmsUser[] = [];
+  selectedEmail = 'alagappantk@gmail.com'; // Default to Dad's account
   selectedUser: SmsUser | null = null;
   selectedUserSummary: SmsUserSummary | null = null;
 
@@ -1728,6 +1862,17 @@ export class SmsGatewayPanelComponent implements OnInit {
   filterType = 'all';
   filterReadStatus = 'all';
 
+  // Pagination
+  currentPage = 1;
+  pageSize = 50;
+  totalMessagesCount = 0;
+  unreadMessagesCount = 0;
+  recentOtpCount = 0;
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalMessagesCount / this.pageSize));
+  }
+
   loading = false;
   saving = false;
   alertMessage = '';
@@ -1736,7 +1881,7 @@ export class SmsGatewayPanelComponent implements OnInit {
   // Modals
   showSimulateModal = false;
   simulateFormData = {
-    device_id: 1,
+    device_id: 8,
     sender: 'AX-SBINB',
     message: '',
     type: 'OTP'
@@ -1748,14 +1893,14 @@ export class SmsGatewayPanelComponent implements OnInit {
   deviceFormData = {
     device_name: '',
     phone_number: '',
-    owner_id: 1,
+    owner_id: 2,
     owner_name: ''
   };
 
   showGrantAccessModal = false;
   grantFormData = {
-    user_id: 1,
-    device_id: 1,
+    user_id: 2,
+    device_id: 8,
     can_view_messages: true,
     can_delete_messages: true,
     can_receive_notifications: true,
@@ -1797,14 +1942,17 @@ export class SmsGatewayPanelComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           this.smsUsers = res.data;
-          // Auto-select parent/dad or first user if none selected
-          if (!this.selectedUser && this.smsUsers.length > 0) {
-            const dadUser = this.smsUsers.find(u => u.user_type === 'parent') || this.smsUsers[0];
-            this.selectUser(dadUser);
-          } else if (this.selectedUser) {
-            // refresh active user reference
-            const updated = this.smsUsers.find(u => u.id === this.selectedUser!.id);
-            if (updated) this.selectedUser = updated;
+          // Determine which email to select:
+          // Prefer 'alagappantk@gmail.com' (Appa with 1543 messages) or first with messages
+          if (!this.selectedUser) {
+            const defaultUser = 
+              this.smsUsers.find(u => u.email === this.selectedEmail) || 
+              this.smsUsers.find(u => (u.total_messages_count || 0) > 0) || 
+              this.smsUsers[0];
+            
+            if (defaultUser) {
+              this.selectUserByEmail(defaultUser.email);
+            }
           }
         }
         this.cdr.markForCheck();
@@ -1823,50 +1971,91 @@ export class SmsGatewayPanelComponent implements OnInit {
     });
   }
 
-  selectUser(user: SmsUser) {
-    this.selectedUser = user;
-    this.filterDeviceId = 'all';
-    this.loadSelectedUserData();
-  }
-
-  loadSelectedUserData() {
-    if (!this.selectedUser) return;
-    const uid = this.selectedUser.id;
+  /**
+   * Recreates the login.php user lookup flow:
+   * Finds the user by email without requiring a password in the admin panel,
+   * then loads their accessible devices and live SMS data.
+   */
+  selectUserByEmail(email: string) {
+    if (!email) return;
+    this.selectedEmail = email;
     this.loading = true;
 
-    // Load user summary & devices
-    this.api.getSmsUserSummary(uid).subscribe({
+    this.api.getSmsUserByEmail(email).subscribe({
       next: (res) => {
-        if (res.success) {
-          this.selectedUserSummary = res.data;
-          this.devices = res.data.devices || [];
-          this.fcmTokens = res.data.fcmTokens || [];
-          if (this.devices.length > 0 && (!this.simulateFormData.device_id || !this.devices.some(d => d.id === this.simulateFormData.device_id))) {
+        if (res.success && res.user) {
+          this.selectedUser = res.user;
+          this.devices = res.devices || [];
+
+          // Auto-select the active device (device with messages or first device)
+          if (res.activeDevice) {
+            this.filterDeviceId = res.activeDevice.id.toString();
+            this.simulateFormData.device_id = res.activeDevice.id;
+          } else if (this.devices.length > 0) {
+            this.filterDeviceId = this.devices[0].id.toString();
             this.simulateFormData.device_id = this.devices[0].id;
+          } else {
+            this.filterDeviceId = 'all';
           }
+
+          this.currentPage = 1;
+          this.loadUserMessages();
+          this.loadUserAccess();
+          this.loadUserNotifications();
+          this.loadUserFcmTokens();
         }
         this.cdr.markForCheck();
       },
-      error: (err) => console.error('Failed to load user summary:', err)
+      error: (err) => {
+        this.loading = false;
+        console.error('Failed to select user by email:', err);
+        // Fallback: try by local user list
+        const match = this.smsUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+        if (match) {
+          this.selectedUser = match;
+          this.loadUserMessages();
+          this.loadUserAccess();
+        }
+        this.cdr.markForCheck();
+      }
     });
+  }
 
+  setDeviceFilter(devId: string) {
+    this.filterDeviceId = devId;
+    this.currentPage = 1;
     this.loadUserMessages();
-    this.loadUserAccess();
-    this.loadUserNotifications();
   }
 
   loadUserMessages() {
     if (!this.selectedUser) return;
     this.loading = true;
 
+    const offset = (this.currentPage - 1) * this.pageSize;
+
     this.api.getUserMessages(this.selectedUser.id, {
-      device_id: this.filterDeviceId
+      device_id: this.filterDeviceId,
+      search: this.searchQuery,
+      type: this.filterType,
+      is_read: this.filterReadStatus,
+      limit: this.pageSize,
+      offset: offset
     }).subscribe({
       next: (res) => {
         this.loading = false;
         if (res.success) {
           this.messages = res.data;
-          this.applyMessageFilters();
+          this.filteredMessages = res.data;
+
+          if (res.pagination) {
+            this.totalMessagesCount = res.pagination.total;
+          } else {
+            this.totalMessagesCount = res.data.length;
+          }
+
+          // Count unreads and OTPs in current slice
+          this.unreadMessagesCount = this.messages.filter(m => !m.is_read).length;
+          this.recentOtpCount = this.messages.filter(m => m.is_otp).length;
         }
         this.cdr.markForCheck();
       },
@@ -1899,6 +2088,17 @@ export class SmsGatewayPanelComponent implements OnInit {
     });
   }
 
+  loadUserFcmTokens() {
+    if (!this.selectedUser) return;
+    this.api.getUserFcmTokens(this.selectedUser.id).subscribe({
+      next: (res) => {
+        if (res.success) this.fcmTokens = res.data;
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('Failed to load user FCM tokens:', err)
+    });
+  }
+
   loadLogs() {
     this.api.getSmsLogs({ limit: 100 }).subscribe({
       next: (res) => {
@@ -1912,42 +2112,44 @@ export class SmsGatewayPanelComponent implements OnInit {
   switchSubTab(tab: 'messages' | 'devices' | 'access' | 'notifications' | 'logs') {
     this.activeSubTab = tab;
     if (tab === 'messages') this.loadUserMessages();
-    else if (tab === 'devices') this.loadSelectedUserData();
+    else if (tab === 'devices') this.selectUserByEmail(this.selectedEmail);
     else if (tab === 'access') this.loadUserAccess();
     else if (tab === 'notifications') {
       this.loadUserNotifications();
-      this.loadSelectedUserData();
+      this.loadUserFcmTokens();
     } else if (tab === 'logs') {
       this.loadLogs();
     }
   }
 
-  applyMessageFilters() {
-    let result = [...this.messages];
+  onSearchInput() {
+    this.currentPage = 1;
+    this.loadUserMessages();
+  }
 
-    // Filter by type
-    if (this.filterType !== 'all') {
-      result = result.filter(m => (m.inferred_type || m.type) === this.filterType);
-    }
+  onFilterChange() {
+    this.currentPage = 1;
+    this.loadUserMessages();
+  }
 
-    // Filter by read status
-    if (this.filterReadStatus !== 'all') {
-      const isReadVal = this.filterReadStatus === '1' ? 1 : 0;
-      result = result.filter(m => m.is_read === isReadVal);
-    }
+  onPageSizeChange() {
+    this.currentPage = 1;
+    this.loadUserMessages();
+  }
 
-    // Filter by search query
-    if (this.searchQuery && this.searchQuery.trim() !== '') {
-      const q = this.searchQuery.toLowerCase().trim();
-      result = result.filter(m => 
-        (m.sender && m.sender.toLowerCase().includes(q)) ||
-        (m.message && m.message.toLowerCase().includes(q)) ||
-        (m.otp_code && m.otp_code.includes(q))
-      );
-    }
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+    this.loadUserMessages();
+  }
 
-    this.filteredMessages = result;
-    this.cdr.markForCheck();
+  getPageStart(): number {
+    if (this.totalMessagesCount === 0) return 0;
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  getPageEnd(): number {
+    return Math.min(this.currentPage * this.pageSize, this.totalMessagesCount);
   }
 
   // ==========================================
@@ -2001,7 +2203,8 @@ export class SmsGatewayPanelComponent implements OnInit {
     this.api.deleteUserMessage(this.selectedUser.id, msg.id).subscribe({
       next: () => {
         this.messages = this.messages.filter(m => m.id !== msg.id);
-        this.applyMessageFilters();
+        this.filteredMessages = this.filteredMessages.filter(m => m.id !== msg.id);
+        this.totalMessagesCount = Math.max(0, this.totalMessagesCount - 1);
         this.showAlert('Message deleted successfully', 'success');
         this.loadSmsUsers();
       },
@@ -2015,9 +2218,10 @@ export class SmsGatewayPanelComponent implements OnInit {
 
   triggerSelectedUserSync() {
     if (!this.selectedUser) return;
-    this.api.triggerUserDeviceSync(this.selectedUser.id).subscribe({
+    const targetDevId = this.filterDeviceId !== 'all' ? parseInt(this.filterDeviceId, 10) : undefined;
+    this.api.triggerUserDeviceSync(this.selectedUser.id, { device_id: targetDevId }).subscribe({
       next: (res) => {
-        this.showAlert(res.message || 'Sync signal dispatched to user devices', 'success');
+        this.showAlert(res.message || 'Sync signal dispatched to phone device(s)', 'success');
         this.loadUserMessages();
         this.loadLogs();
       },
@@ -2038,7 +2242,9 @@ export class SmsGatewayPanelComponent implements OnInit {
   }
 
   openSimulateModal() {
-    if (this.devices.length > 0) {
+    if (this.filterDeviceId !== 'all') {
+      this.simulateFormData.device_id = parseInt(this.filterDeviceId, 10);
+    } else if (this.devices.length > 0) {
       this.simulateFormData.device_id = this.devices[0].id;
     } else if (this.allDevices.length > 0) {
       this.simulateFormData.device_id = this.allDevices[0].id;
@@ -2064,7 +2270,7 @@ export class SmsGatewayPanelComponent implements OnInit {
     }
 
     this.saving = true;
-    const uid = this.selectedUser ? this.selectedUser.id : 1;
+    const uid = this.selectedUser ? this.selectedUser.id : 2;
 
     this.api.ingestUserMessage(uid, this.simulateFormData).subscribe({
       next: () => {
@@ -2072,7 +2278,6 @@ export class SmsGatewayPanelComponent implements OnInit {
         this.closeSimulateModal();
         this.showAlert('SMS ingested successfully & push dispatched', 'success');
         this.loadUserMessages();
-        this.loadSelectedUserData();
         this.loadSmsUsers();
         this.loadLogs();
       },
@@ -2089,7 +2294,7 @@ export class SmsGatewayPanelComponent implements OnInit {
     this.deviceFormData = {
       device_name: '',
       phone_number: '',
-      owner_id: this.selectedUser ? this.selectedUser.id : 1,
+      owner_id: this.selectedUser ? this.selectedUser.id : 2,
       owner_name: this.selectedUser ? (this.selectedUser.name || '') : ''
     };
     this.showDeviceModal = true;
@@ -2108,41 +2313,25 @@ export class SmsGatewayPanelComponent implements OnInit {
     this.saving = true;
     const uid = this.selectedUser ? this.selectedUser.id : this.deviceFormData.owner_id;
 
-    if (this.isEditingDevice && this.editingDeviceId) {
-      this.api.updateSmsDevice(this.editingDeviceId, this.deviceFormData).subscribe({
-        next: () => {
-          this.saving = false;
-          this.closeDeviceModal();
-          this.showAlert('Device updated successfully', 'success');
-          this.loadSelectedUserData();
-          this.loadAllDevices();
-        },
-        error: () => {
-          this.saving = false;
-          this.showAlert('Failed to update device', 'error');
-        }
-      });
-    } else {
-      this.api.createUserDevice(uid, {
-        device_name: this.deviceFormData.device_name,
-        phone_number: this.deviceFormData.phone_number,
-        owner_name: this.selectedUser?.name || this.deviceFormData.owner_name
-      }).subscribe({
-        next: () => {
-          this.saving = false;
-          this.closeDeviceModal();
-          this.showAlert('Device registered successfully', 'success');
-          this.loadSelectedUserData();
-          this.loadAllDevices();
-          this.loadSmsUsers();
-          this.loadLogs();
-        },
-        error: (err) => {
-          this.saving = false;
-          this.showAlert(err.error?.error || 'Failed to register device', 'error');
-        }
-      });
-    }
+    this.api.createUserDevice(uid, {
+      device_name: this.deviceFormData.device_name,
+      phone_number: this.deviceFormData.phone_number,
+      owner_name: this.selectedUser?.name || this.deviceFormData.owner_name
+    }).subscribe({
+      next: () => {
+        this.saving = false;
+        this.closeDeviceModal();
+        this.showAlert('Device registered successfully', 'success');
+        this.selectUserByEmail(this.selectedEmail);
+        this.loadAllDevices();
+        this.loadSmsUsers();
+        this.loadLogs();
+      },
+      error: (err) => {
+        this.saving = false;
+        this.showAlert(err.error?.error || 'Failed to register device', 'error');
+      }
+    });
   }
 
   deleteDevice(dev: SmsDevice) {
@@ -2150,7 +2339,7 @@ export class SmsGatewayPanelComponent implements OnInit {
     this.api.deleteSmsDevice(dev.id).subscribe({
       next: () => {
         this.showAlert('Device removed', 'success');
-        this.loadSelectedUserData();
+        this.selectUserByEmail(this.selectedEmail);
         this.loadAllDevices();
         this.loadSmsUsers();
       },
@@ -2164,8 +2353,8 @@ export class SmsGatewayPanelComponent implements OnInit {
 
   openGrantAccessModal() {
     this.grantFormData = {
-      user_id: this.selectedUser ? this.selectedUser.id : 1,
-      device_id: this.devices.length > 0 ? this.devices[0].id : (this.allDevices[0]?.id || 1),
+      user_id: this.selectedUser ? this.selectedUser.id : 2,
+      device_id: this.devices.length > 0 ? this.devices[0].id : (this.allDevices[0]?.id || 8),
       can_view_messages: true,
       can_delete_messages: true,
       can_receive_notifications: true,
@@ -2180,7 +2369,7 @@ export class SmsGatewayPanelComponent implements OnInit {
 
   submitGrantAccess() {
     this.saving = true;
-    const uid = this.selectedUser ? this.selectedUser.id : 1;
+    const uid = this.selectedUser ? this.selectedUser.id : 2;
 
     this.api.grantUserAccess(uid, {
       target_user_id: this.grantFormData.user_id,
@@ -2258,7 +2447,7 @@ export class SmsGatewayPanelComponent implements OnInit {
     this.api.deleteSmsFcmToken(tok.id).subscribe({
       next: () => {
         this.showAlert('Token removed', 'success');
-        this.loadSelectedUserData();
+        this.loadUserFcmTokens();
         this.loadSmsUsers();
       },
       error: () => this.showAlert('Failed to remove token', 'error')

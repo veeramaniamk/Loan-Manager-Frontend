@@ -560,6 +560,21 @@ export class ApiService {
   // 👤 USER-SCOPED SMS GATEWAY OPERATIONS
   // ==========================================
 
+  getSmsUserByEmail(email: string): Observable<{
+    success: boolean;
+    user: SmsUser;
+    devices: SmsDevice[];
+    activeDevice: SmsDevice | null;
+  }> {
+    const params = new HttpParams().set('email', email.trim());
+    return this.http.get<{
+      success: boolean;
+      user: SmsUser;
+      devices: SmsDevice[];
+      activeDevice: SmsDevice | null;
+    }>(`${this.baseUrl}/admin/sms/users/by-email`, { params });
+  }
+
   getSmsUserSummary(userId: number): Observable<{ success: boolean; data: SmsUserSummary }> {
     return this.http.get<{ success: boolean; data: SmsUserSummary }>(`${this.baseUrl}/admin/sms/users/${userId}/summary`);
   }
@@ -579,7 +594,7 @@ export class ApiService {
     is_read?: number | string;
     limit?: number;
     offset?: number;
-  }): Observable<{ success: boolean; data: SmsMessage[] }> {
+  }): Observable<{ success: boolean; data: SmsMessage[]; pagination?: { limit: number; offset: number; total: number } }> {
     let params = new HttpParams();
     if (filters) {
       Object.entries(filters).forEach(([key, val]) => {
@@ -588,7 +603,7 @@ export class ApiService {
         }
       });
     }
-    return this.http.get<{ success: boolean; data: SmsMessage[] }>(`${this.baseUrl}/admin/sms/users/${userId}/messages`, { params });
+    return this.http.get<{ success: boolean; data: SmsMessage[]; pagination?: { limit: number; offset: number; total: number } }>(`${this.baseUrl}/admin/sms/users/${userId}/messages`, { params });
   }
 
   ingestUserMessage(userId: number, data: {
