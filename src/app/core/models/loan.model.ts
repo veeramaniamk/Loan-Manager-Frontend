@@ -327,3 +327,148 @@ export interface ExpenseOverviewSummary {
   dailyBreakdown?: ExpenseDailyItem[];
   monthlyBreakdown?: ExpenseMonthlyItem[];
 }
+
+// ==========================================
+// 📱 SMS GATEWAY & DAD'S PHONE TELEMETRY MODELS
+// ==========================================
+
+export interface SmsDevice {
+  id: number;
+  owner_id: number;
+  owner_name?: string;
+  owner_user_name?: string;
+  owner_user_email?: string;
+  device_name: string;
+  phone_number?: string;
+  created_at?: string;
+  updated_at?: string;
+  total_messages?: number;
+  unread_messages?: number;
+  latest_message_at?: string;
+  authorized_users_count?: number;
+}
+
+export interface SmsMessage {
+  id: number;
+  messageId?: string;
+  type?: string;
+  inferred_type?: string;
+  device_id: number;
+  device_name?: string;
+  device_phone?: string;
+  owner_name?: string;
+  sender: string;
+  message: string;
+  is_read: number | boolean;
+  read_by?: number;
+  read_by_name?: string;
+  read_at?: string;
+  received_at: string;
+  deleted_by?: number;
+  deleted_at?: string;
+  inserted_at?: string;
+  updated_at?: string;
+  is_otp?: boolean;
+  otp_code?: string | null;
+  copied?: boolean;
+}
+
+export interface SmsNotification {
+  id: number;
+  message_id: number;
+  user_id: number;
+  user_name?: string;
+  user_email?: string;
+  msg_sender?: string;
+  msg_content?: string;
+  msg_type?: string;
+  device_name?: string;
+  sent_at?: string;
+  delivery_status: 'pending' | 'sent' | 'failed';
+}
+
+export interface SmsUserDeviceAccess {
+  id: number;
+  user_id: number;
+  device_id: number;
+  user_name?: string;
+  user_email?: string;
+  user_type?: 'parent' | 'child' | 'admin';
+  device_name?: string;
+  device_phone?: string;
+  can_view_messages: number | boolean;
+  can_delete_messages: number | boolean;
+  can_receive_notifications: number | boolean;
+  can_send_sms: number | boolean;
+  granted_by: number;
+  granted_by_name?: string;
+  granted_at?: string;
+  updated_at?: string;
+}
+
+export interface SmsUserFcmToken {
+  id: number;
+  user_id: number;
+  user_name?: string;
+  user_email?: string;
+  user_type?: string;
+  fcm_token: string;
+  device_type: string;
+  is_active: number | boolean;
+  created_at?: string;
+  updated_at?: string;
+  last_used_at?: string;
+}
+
+export interface SmsUser {
+  id: number;
+  name?: string;
+  email: string;
+  user_type: 'parent' | 'child' | 'admin';
+  is_admin: number | boolean;
+  created_at?: string;
+  devices_owned?: number;
+  active_fcm_tokens?: number;
+  accessible_devices?: number;
+}
+
+export interface SmsLog {
+  id: number;
+  title: string;
+  message: string;
+  inserted_at?: string;
+}
+
+export interface SmsGatewayOverview {
+  devices: {
+    total: number;
+    active: number;
+    latest: SmsDevice | null;
+  };
+  messages: {
+    total: number;
+    unread: number;
+    today: number;
+    last24h: number;
+    latestAt: string | null;
+    recentOtpCount: number;
+  };
+  notifications: {
+    total: number;
+    sent: number;
+    failed: number;
+    pending: number;
+    deliveryRate: number;
+  };
+  fcm: {
+    total: number;
+    active: number;
+  };
+  users: {
+    total: number;
+    parents: number;
+    children: number;
+    admins: number;
+  };
+  accessGrants: number;
+}

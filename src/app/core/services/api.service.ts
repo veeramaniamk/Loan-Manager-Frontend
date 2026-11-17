@@ -17,7 +17,15 @@ import {
   DailyExpense,
   ExpenseTag,
   ExpensePaymentMethod,
-  ExpenseOverviewSummary
+  ExpenseOverviewSummary,
+  SmsDevice,
+  SmsMessage,
+  SmsNotification,
+  SmsUserDeviceAccess,
+  SmsUserFcmToken,
+  SmsUser,
+  SmsLog,
+  SmsGatewayOverview
 } from '../models/loan.model';
 
 @Injectable({
@@ -395,5 +403,155 @@ export class ApiService {
 
   deleteExpensePaymentMethod(id: number): Observable<{ success: boolean; message: string }> {
     return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/expenses/payment-methods/${id}`);
+  }
+
+  // ==========================================
+  // 📱 SMS GATEWAY & DAD'S PHONE TELEMETRY (ADMIN ONLY)
+  // ==========================================
+
+  getSmsOverview(): Observable<{ success: boolean; data: SmsGatewayOverview }> {
+    return this.http.get<{ success: boolean; data: SmsGatewayOverview }>(`${this.baseUrl}/admin/sms/overview`);
+  }
+
+  getSmsMessages(filters?: {
+    search?: string;
+    device_id?: number | string;
+    type?: string;
+    is_read?: number | string;
+    limit?: number;
+    offset?: number;
+  }): Observable<{ success: boolean; data: SmsMessage[] }> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, val]) => {
+        if (val !== undefined && val !== null && val !== '') {
+          params = params.set(key, val.toString());
+        }
+      });
+    }
+    return this.http.get<{ success: boolean; data: SmsMessage[] }>(`${this.baseUrl}/admin/sms/messages`, { params });
+  }
+
+  sendSimulatedSms(data: {
+    device_id: number;
+    sender: string;
+    message: string;
+    type?: string;
+  }): Observable<{ success: boolean; message: string; data: any }> {
+    return this.http.post<{ success: boolean; message: string; data: any }>(`${this.baseUrl}/admin/sms/messages`, data);
+  }
+
+  toggleSmsMessageRead(id: number, is_read: boolean): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/messages/${id}/read`, { is_read });
+  }
+
+  markAllSmsRead(deviceId?: number): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/messages-batch/mark-all-read`, { device_id: deviceId });
+  }
+
+  deleteSmsMessage(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/messages/${id}`);
+  }
+
+  getSmsDevices(): Observable<{ success: boolean; data: SmsDevice[] }> {
+    return this.http.get<{ success: boolean; data: SmsDevice[] }>(`${this.baseUrl}/admin/sms/devices`);
+  }
+
+  createSmsDevice(device: { device_name: string; phone_number?: string; owner_id?: number; owner_name?: string }): Observable<{ success: boolean; message: string; deviceId: number }> {
+    return this.http.post<{ success: boolean; message: string; deviceId: number }>(`${this.baseUrl}/admin/sms/devices`, device);
+  }
+
+  updateSmsDevice(id: number, device: { device_name: string; phone_number?: string; owner_id?: number; owner_name?: string }): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/devices/${id}`, device);
+  }
+
+  deleteSmsDevice(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/devices/${id}`);
+  }
+
+  getSmsNotifications(filters?: { status?: string; limit?: number }): Observable<{ success: boolean; data: SmsNotification[] }> {
+    let params = new HttpParams();
+    if (filters) {
+      if (filters.status) params = params.set('status', filters.status);
+      if (filters.limit) params = params.set('limit', filters.limit.toString());
+    }
+    return this.http.get<{ success: boolean; data: SmsNotification[] }>(`${this.baseUrl}/admin/sms/notifications`, { params });
+  }
+
+  retrySmsNotification(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/notifications/${id}/retry`, {});
+  }
+
+  getSmsDeviceAccess(): Observable<{ success: boolean; data: SmsUserDeviceAccess[] }> {
+    return this.http.get<{ success: boolean; data: SmsUserDeviceAccess[] }>(`${this.baseUrl}/admin/sms/access`);
+  }
+
+  grantSmsDeviceAccess(access: {
+    user_id: number;
+    device_id: number;
+    can_view_messages?: boolean;
+    can_delete_messages?: boolean;
+    can_receive_notifications?: boolean;
+    can_send_sms?: boolean;
+  }): Observable<{ success: boolean; message: string; id: number }> {
+    return this.http.post<{ success: boolean; message: string; id: number }>(`${this.baseUrl}/admin/sms/access`, access);
+  }
+
+  updateSmsDeviceAccess(id: number, access: {
+    can_view_messages: boolean;
+    can_delete_messages: boolean;
+    can_receive_notifications: boolean;
+    can_send_sms: boolean;
+  }): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/access/${id}`, access);
+  }
+
+  revokeSmsDeviceAccess(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/access/${id}`);
+  }
+
+  getSmsUsers(): Observable<{ success: boolean; data: SmsUser[] }> {
+    return this.http.get<{ success: boolean; data: SmsUser[] }>(`${this.baseUrl}/admin/sms/users`);
+  }
+
+  createSmsUser(user: { name?: string; email: string; user_type?: string; is_admin?: boolean }): Observable<{ success: boolean; message: string; userId: number }> {
+    return this.http.post<{ success: boolean; message: string; userId: number }>(`${this.baseUrl}/admin/sms/users`, user);
+  }
+
+  updateSmsUser(id: number, user: { name?: string; email: string; user_type?: string; is_admin?: boolean }): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/users/${id}`, user);
+  }
+
+  deleteSmsUser(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/users/${id}`);
+  }
+
+  getSmsFcmTokens(): Observable<{ success: boolean; data: SmsUserFcmToken[] }> {
+    return this.http.get<{ success: boolean; data: SmsUserFcmToken[] }>(`${this.baseUrl}/admin/sms/fcm-tokens`);
+  }
+
+  toggleSmsFcmToken(id: number, is_active: boolean): Observable<{ success: boolean; message: string }> {
+    return this.http.put<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/fcm-tokens/${id}/toggle`, { is_active });
+  }
+
+  deleteSmsFcmToken(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/fcm-tokens/${id}`);
+  }
+
+  getSmsLogs(filters?: { search?: string; limit?: number }): Observable<{ success: boolean; data: SmsLog[] }> {
+    let params = new HttpParams();
+    if (filters) {
+      if (filters.search) params = params.set('search', filters.search);
+      if (filters.limit) params = params.set('limit', filters.limit.toString());
+    }
+    return this.http.get<{ success: boolean; data: SmsLog[] }>(`${this.baseUrl}/admin/sms/logs`, { params });
+  }
+
+  deleteSmsLog(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/logs/${id}`);
+  }
+
+  clearSmsLogs(): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.baseUrl}/admin/sms/logs-clear`);
   }
 }

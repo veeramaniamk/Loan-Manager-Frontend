@@ -11,11 +11,12 @@ import {
   CateringStaffPayment,
   CateringSummary
 } from '../../core/models/loan.model';
+import { SmsGatewayPanelComponent } from './sms-gateway-panel.component';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe, SmsGatewayPanelComponent],
   template: `
     <div class="container admin-container">
       <div class="page-header">
@@ -54,6 +55,14 @@ import {
           (click)="switchTab('logs')"
         >
           🚨 Security & Failure Audit Logs
+        </button>
+        <button 
+          class="tab-link tab-link-sms" 
+          [class.active]="activeTab === 'sms'" 
+          (click)="switchTab('sms')"
+        >
+          <span class="live-pulse-dot"></span>
+          📱 Dad's Phone & SMS Gateway
         </button>
       </div>
 
@@ -407,6 +416,11 @@ import {
         </div>
       }
 
+      <!-- TAB 5: Dad's Phone & SMS Gateway Monitor -->
+      @if (activeTab === 'sms') {
+        <app-sms-gateway-panel></app-sms-gateway-panel>
+      }
+
       <!-- MODAL 1: Add / Edit User -->
       @if (showUserModal) {
         <div class="modal-overlay" (click)="closeUserModal()">
@@ -703,6 +717,25 @@ import {
       color: var(--primary);
       border-bottom-color: var(--primary);
     }
+    .tab-link-sms {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .live-pulse-dot {
+      width: 7px;
+      height: 7px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: tabPulse 1.8s infinite;
+      display: inline-block;
+    }
+    @keyframes tabPulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
     .content-action-bar {
       display: flex;
       justify-content: space-between;
@@ -855,7 +888,7 @@ export class AdminComponent implements OnInit {
   authService = inject(AuthService);
   cdr = inject(ChangeDetectorRef);
 
-  activeTab: 'users' | 'activity' | 'logs' | 'catering' = 'users';
+  activeTab: 'users' | 'activity' | 'logs' | 'catering' | 'sms' = 'users';
 
   // Users tab
   users: User[] = this.getCachedUsers();
@@ -903,7 +936,7 @@ export class AdminComponent implements OnInit {
     this.loadUsers();
   }
 
-  switchTab(tab: 'users' | 'activity' | 'logs' | 'catering') {
+  switchTab(tab: 'users' | 'activity' | 'logs' | 'catering' | 'sms') {
     this.activeTab = tab;
     this.cdr.markForCheck();
     if (tab === 'catering' && this.cateringStaff.length === 0) {
