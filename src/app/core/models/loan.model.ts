@@ -340,6 +340,7 @@ export interface SmsDevice {
   owner_user_email?: string;
   device_name: string;
   phone_number?: string;
+  role?: 'owner' | 'user' | string;
   created_at?: string;
   updated_at?: string;
   total_messages?: number;
@@ -396,6 +397,7 @@ export interface SmsUserDeviceAccess {
   user_type?: 'parent' | 'child' | 'admin';
   device_name?: string;
   device_phone?: string;
+  device_owner?: string;
   can_view_messages: number | boolean;
   can_delete_messages: number | boolean;
   can_receive_notifications: number | boolean;
@@ -413,7 +415,8 @@ export interface SmsUserFcmToken {
   user_email?: string;
   user_type?: string;
   fcm_token: string;
-  device_type: string;
+  device_type?: string;
+  device_info?: string;
   is_active: number | boolean;
   created_at?: string;
   updated_at?: string;
@@ -428,8 +431,28 @@ export interface SmsUser {
   is_admin: number | boolean;
   created_at?: string;
   devices_owned?: number;
+  devices_count?: number;
+  owned_devices_count?: number;
+  total_messages_count?: number;
+  unread_count?: number;
   active_fcm_tokens?: number;
   accessible_devices?: number;
+  last_active_at?: string | null;
+}
+
+export interface SmsUserSummary {
+  user: SmsUser;
+  stats: {
+    devicesCount: number;
+    totalMessages: number;
+    unreadMessages: number;
+    todayMessages: number;
+    otpMessages: number;
+    latestMessageAt: string | null;
+    activeTokensCount: number;
+  };
+  devices: SmsDevice[];
+  fcmTokens: SmsUserFcmToken[];
 }
 
 export interface SmsLog {
