@@ -28,12 +28,13 @@ import {
   SmsLog,
   SmsGatewayOverview
 } from '../models/loan.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  private readonly baseUrl = '/api';
+  private readonly baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

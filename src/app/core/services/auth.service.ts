@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, of } from 'rxjs';
 import { User } from '../models/loan.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly apiUrl = '/api/auth';
+  private readonly apiUrl = `${environment.apiUrl}/auth`;
   
   // Reactive state using Angular Signals
   currentUser = signal<User | null>(this.getStoredUser());

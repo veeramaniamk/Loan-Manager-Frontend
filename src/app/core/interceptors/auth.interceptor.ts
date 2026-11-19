@@ -38,7 +38,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(cloned).pipe(
     catchError((error: HttpErrorResponse) => {
       // If unauthorized and not already on the login or public endpoints
-      if ((error.status === 401 || error.status === 403) && !req.url.includes('/api/auth/login') && !req.url.includes('/api/auth/csrf')) {
+      if ((error.status === 401 || error.status === 403) && !req.url.includes('/auth/login') && !req.url.includes('/auth/csrf')) {
         console.warn(`[HTTP Error ${error.status}] Access revoked or session expired:`, error.error);
         if (error.status === 401) {
           authService.clearSession();
